@@ -28,31 +28,31 @@ INSERT INTO public.notas_fiscais (id, obra_id, chave_acesso, fornecedor, cnpj_fo
 ('f555e8d3-5b8d-4e29-a1b7-a3f8c8d8b9f5', 'd377e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a3', '35260588990011000122550010000991821888999000', 'Elevadores Atlas Schindler', '88.990.011/0001-22', 350000.00, '2026-05-20', 'Autorizada', 'Sem Manifesto')
 ON CONFLICT (id) DO NOTHING;
 
--- 4. Inserindo Contas Fixas (Tabela correta: contas_fixas)
+-- 4. Inserindo Contas Fixas (Tabela com ID UUID válidos)
 INSERT INTO public.contas_fixas (id, obra_id, nome, tipo, dia_vencimento, valor_medio) VALUES
-('rule-1', 'b199e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1', 'Enel Distribuição São Paulo', 'Energia', 10, 15000.00),
-('rule-2', 'b199e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1', 'Sabesp S.A', 'Agua', 15, 8500.00),
-('rule-3', 'b199e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1', 'Vivo Empresas', 'Internet', 20, 950.00),
-('rule-4', 'c288e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a2', 'CPFL Energia', 'Energia', 12, 22000.00),
-('rule-5', 'd377e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a3', 'Enel Distribuição', 'Energia', 10, 45000.00)
+('e111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e1', 'b199e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1', 'Enel Distribuição São Paulo', 'Energia', 10, 15000.00),
+('e222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e2', 'b199e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1', 'Sabesp S.A', 'Agua', 15, 8500.00),
+('e333e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e3', 'b199e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1', 'Vivo Empresas', 'Internet', 20, 950.00),
+('e444e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e4', 'c288e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a2', 'CPFL Energia', 'Energia', 12, 22000.00),
+('e555e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e5', 'd377e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a3', 'Enel Distribuição', 'Energia', 10, 45000.00)
 ON CONFLICT (id) DO NOTHING;
 
--- 5. Inserindo Faturas Históricas (Com status válidos: 'Pago', 'Pendente')
--- Janeiro a Abril (Pagos) e Maio (Pendente) para a 'rule-1' (Enel Bella Vista)
+-- 5. Inserindo Faturas Históricas (Com ID UUID válidos da conta fixa)
+-- Janeiro a Abril (Pagos) e Maio (Pendente) para a rule-1 (Enel Bella Vista)
 INSERT INTO public.faturas (conta_fixa_id, mes_referencia, valor, data_vencimento, status) VALUES
-('rule-1', '2026-01', 14200.50, '2026-01-10', 'Pago'),
-('rule-1', '2026-02', 14850.00, '2026-02-10', 'Pago'),
-('rule-1', '2026-03', 15100.20, '2026-03-10', 'Pago'),
-('rule-1', '2026-04', 16050.00, '2026-04-10', 'Pago'),
-('rule-1', '2026-05', 15800.75, '2026-05-10', 'Pendente');
+('e111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e1', '2026-01', 14200.50, '2026-01-10', 'Pago'),
+('e111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e1', '2026-02', 14850.00, '2026-02-10', 'Pago'),
+('e111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e1', '2026-03', 15100.20, '2026-03-10', 'Pago'),
+('e111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e1', '2026-04', 16050.00, '2026-04-10', 'Pago'),
+('e111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e1', '2026-05', 15800.75, '2026-05-10', 'Pendente');
 
--- Janeiro a Abril (Pagos) e Maio (Pendente) para a 'rule-2' (Sabesp Bella Vista)
+-- Janeiro a Abril (Pagos) e Maio (Pendente) para a rule-2 (Sabesp Bella Vista)
 INSERT INTO public.faturas (conta_fixa_id, mes_referencia, valor, data_vencimento, status) VALUES
-('rule-2', '2026-01', 8100.00, '2026-01-15', 'Pago'),
-('rule-2', '2026-02', 8250.00, '2026-02-15', 'Pago'),
-('rule-2', '2026-03', 8900.00, '2026-03-15', 'Pago'),
-('rule-2', '2026-04', 8600.00, '2026-04-15', 'Pago'),
-('rule-2', '2026-05', 9150.00, '2026-05-15', 'Pendente');
+('e222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e2', '2026-01', 8100.00, '2026-01-15', 'Pago'),
+('e222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e2', '2026-02', 8250.00, '2026-02-15', 'Pago'),
+('e222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e2', '2026-03', 8900.00, '2026-03-15', 'Pago'),
+('e222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e2', '2026-04', 8600.00, '2026-04-15', 'Pago'),
+('e222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e2', '2026-05', 9150.00, '2026-05-15', 'Pendente');
 
 -- 6. Inserindo Boletos DDA (Com colunas corretas do schema e relacionamentos reais)
 INSERT INTO public.boletos_dda (obra_id, emissor_nome, emissor_cnpj, valor, data_vencimento, linha_digitavel, status_dda, nfe_vinculada_id) VALUES
