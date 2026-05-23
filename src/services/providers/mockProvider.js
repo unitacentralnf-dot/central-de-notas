@@ -359,16 +359,20 @@ export async function mockCreateUsuario({ nome, email, senha, role, obraId }) {
 
   // 1. Tenta criar no Supabase Auth (se service_role key estiver configurada)
   if (supabaseAdmin) {
-    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password: senha,
-      email_confirm: true,
-      user_metadata: { nome, role, obra_id: obraId }
-    });
-    if (!authError && authData?.user) {
-      authUserId = authData.user.id;
-    } else {
-      console.warn('Erro ao criar usuario no Auth, fallback para criacao direta:', authError);
+    try {
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email,
+        password: senha,
+        email_confirm: true,
+        user_metadata: { nome, role, obra_id: obraId }
+      });
+      if (!authError && authData?.user) {
+        authUserId = authData.user.id;
+      } else {
+        console.warn('Erro ao criar usuario no Auth, fallback para criacao direta:', authError);
+      }
+    } catch (e) {
+      console.warn('Exceção ao criar usuario no Auth, fallback:', e.message);
     }
   }
 

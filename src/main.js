@@ -1,5 +1,6 @@
 import './style.css';
 import { initializeData, getObras, loginUser, submitAccessRequest, getUsuarios, createUsuario } from './services/dataService.js';
+import { supabase } from './services/supabaseClient.js';
 import { renderDashboard } from './components/Dashboard.js';
 import { renderNFe } from './components/NFe.js';
 import { renderFixedBills } from './components/FixedBills.js';
@@ -183,15 +184,42 @@ function setupFirstAccess() {
 
       try {
         const result = await createUsuario({ nome, email, senha, role: 'master', obraId: null });
-        if (result) {
-          const user = await loginUser(email, senha);
-          if (user) {
-            currentUser = user;
-            currentRole = user.role;
-            sessionStorage.setItem('current_user', JSON.stringify(user));
-            document.getElementById('login-screen').classList.remove('active');
-            document.getElementById('app').style.display = 'flex';
-            await startApp();
+        if (!result) throw new Error('Falha ao criar usuário no banco de dados.');
+
+        // Tenta login via Supabase Auth
+        let user = await loginUser(email, senha);
+
+        // Se Auth falhou, busca direto do banco (fallback senha texto puro)
+        if (!user) {
+          const { data } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('email', email)
+            .single();
+          if (data) {
+            user = {
+              id: data.id,
+              name: data.nome,
+              email: data.email,
+              role: data.role,
+              initials: data.avatar_iniciais,
+              obraId: data.obra_id,
+              welcome: `Olá, ${data.nome.split(' ')[0]}! Bem-vindo ao sistema.`
+            };
+          }
+        }
+
+        if (user) {
+          currentUser = user;
+          currentRole = user.role;
+          sessionStorage.setItem('current_user', JSON.stringify(user));
+          document.getElementById('login-screen').classList.remove('active');
+          document.getElementById('app').style.display = 'flex';
+          await startApp();
+        } else {
+          if (errorMsg) {
+            errorMsg.textContent = 'Usuário criado, mas falha ao autenticar. Tente fazer login manualmente.';
+            errorMsg.style.display = 'block';
           }
         }
       } catch (err) {
