@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Central de Notas - Gestão de Obras</title>
+    <meta name="description" content="Central de gerenciamento de faturas fixas de canteiros de obras e acompanhamento de protestos fiscais por CNPJ." />
+  </head>
+  <body>
+    <div id="app">
+      <!-- Barra Lateral de Navegação -->
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-logo">N</div>
+          <span class="brand-name">Central de Notas</span>
+        </div>
+        
+        <nav class="menu" aria-label="Navegação Principal">
+          <div class="menu-category">Principal</div>
+          
+          <a class="menu-item active" data-view="dashboard" id="nav-dashboard">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" />
+            </svg>
+            <span>Dashboard</span>
+          </a>
+          
+          <div class="menu-category">Gestão & Obras</div>
+          
+          <a class="menu-item" data-view="nfe" id="nav-nfe">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+            <span>Notas Fiscais (NFe)</span>
+          </a>
+          
+          <a class="menu-item" data-view="fixed-bills" id="nav-fixed-bills">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            <span>Contas Fixas</span>
+          </a>
+          
+          <a class="menu-item" data-view="protests" id="nav-protests">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
+            </svg>
+            <span>Regularidade (CNPJ)</span>
+          </a>
+        </nav>
+        
+        <!-- Painel do Usuário Logado -->
+        <div class="user-profile-panel">
+          <div class="user-avatar" id="sidebar-user-avatar">CS</div>
+          <div class="user-info">
+            <span class="user-name" id="sidebar-user-name">Carlos Silva</span>
+            <span class="user-role" id="sidebar-user-role">Administrador da Obra</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Área Principal de Conteúdo -->
+      <main class="content-area">
+        <header class="header">
+          <div class="header-title-container">
+            <h1 id="view-title">Dashboard Operacional</h1>
+            <span class="welcome-message" id="welcome-message">Olá! Bem-vindo de volta.</span>
+          </div>
+          
+          <div class="header-controls">
+            <!-- Widget de Status de Conexão -->
+            <div class="connection-status">
+              <div class="status-indicator">
+                <span class="status-dot">
+                  <span class="status-dot-pulse"></span>
+                </span>
+                <span>Rede: Conectada</span>
+              </div>
+            </div>
+
+            <!-- Seletor Global de Obras (CNPJ) -->
+            <div class="profile-selector-container" id="global-obra-container">
+              <span class="profile-label">Obra Ativa:</span>
+              <select id="globalObraSelect" class="profile-select" style="max-width: 220px;" aria-label="Selecionar Obra Ativa para o SaaS">
+                <!-- Populado via JS -->
+              </select>
+            </div>
+            
+            <!-- Seletor de Perfil Simulado -->
+            <div class="profile-selector-container">
+              <span class="profile-label">Simular:</span>
+              <select id="profileSelect" class="profile-select" aria-label="Selecionar perfil de simulação">
+                <option value="adm">Administrativo da Obra (Alimentador)</option>
+                <option value="engenheiro">Engenheiro da Obra (Consultor)</option>
+                <option value="financeiro">Financeiro (Consultor)</option>
+                <option value="ggo">GGO / Diretor (Consultor)</option>
+              </select>
+            </div>
+            <div id="role-badge-container">
+              <span class="profile-badge adm" id="role-badge">ADM Obra</span>
+            </div>
+          </div>
+        </header>
+        <div id="content-container" class="container" role="region" aria-live="polite">
+          <!-- O JS vai injetar o conteúdo de cada view aqui -->
+        </div>
+      </main>
+    </div>
+
+    <!-- Modais Globais -->
+    <div id="global-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="panel-title" id="modal-title">Título do Modal</h3>
+          <button type="button" class="btn btn-secondary btn-sm" id="close-modal-btn" aria-label="Fechar modal" style="padding: 4px 8px; border-radius: 50%;">×</button>
+        </div>
+        <div class="modal-body" id="modal-body">
+          <!-- Conteúdo dinâmico do modal -->
+        </div>
+        <div class="modal-footer" id="modal-footer">
+          <!-- Botões dinâmicos do modal -->
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
