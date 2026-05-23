@@ -1,5 +1,5 @@
 import './style.css';
-import { initializeData, getObras, loginUser, submitAccessRequest, getUsuarios, createUsuario } from './services/dataService.js';
+import { initializeData, getObras, loginUser, submitAccessRequest, createUsuario } from './services/dataService.js';
 import { supabase } from './services/supabaseClient.js';
 import { renderDashboard } from './components/Dashboard.js';
 import { renderNFe } from './components/NFe.js';
@@ -159,12 +159,8 @@ function setupFirstAccess() {
 
   if (!faArea) return;
 
-  // Verifica se existem usuários — se não, mostra a área
-  getUsuarios().then(users => {
-    if (users.length === 0) {
-      faArea.style.display = 'block';
-    }
-  });
+  // Sempre mostra a área de primeiro acesso (sem depender de query)
+  faArea.style.display = 'block';
 
   if (btnShow && panel) {
     btnShow.addEventListener('click', () => {
@@ -224,7 +220,7 @@ function setupFirstAccess() {
         }
       } catch (err) {
         if (errorMsg) {
-          errorMsg.textContent = `Erro ao criar usuário: ${err.message}`;
+          errorMsg.textContent = `Erro: ${err.message}`;
           errorMsg.style.display = 'block';
         }
       }
