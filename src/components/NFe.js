@@ -173,7 +173,7 @@ export async function renderNFe(container, currentRole, activeObraId) {
   const btnSyncSefaz = document.getElementById('btn-sync-sefaz');
   if (btnSyncSefaz) {
     btnSyncSefaz.addEventListener('click', () => {
-      triggerSefazSync(container, currentRole);
+      triggerSefazSync(container, currentRole, activeObraId);
     });
   }
 
@@ -222,7 +222,7 @@ export async function renderNFe(container, currentRole, activeObraId) {
 }
 
 // Simulação de Sincronização com Webservice Sefaz
-async function triggerSefazSync(container, currentRole) {
+async function triggerSefazSync(container, currentRole, activeObraId) {
   const syncBox = document.getElementById('sync-animation-container');
   const btnSync = document.getElementById('btn-sync-sefaz');
   const statusText = document.getElementById('sync-status-text');

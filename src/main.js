@@ -1,12 +1,14 @@
 import './style.css';
 import { initializeData, getObras, loginUser, submitAccessRequest, createUsuario } from './services/dataService.js';
 import { supabase } from './services/supabaseClient.js';
+import config from './services/config.js';
 import { renderDashboard } from './components/Dashboard.js';
 import { renderNFe } from './components/NFe.js';
 import { renderFixedBills } from './components/FixedBills.js';
 import { renderProtests } from './components/Protests.js';
 import { renderDDA } from './components/DDA.js';
 import { renderMaster } from './components/Master.js';
+import { renderIntegrations } from './components/Integrations.js';
 
 // Estado da Aplicação na Sessão
 let currentView = 'dashboard'; 
@@ -30,6 +32,7 @@ const navItems = {
   'nfe': document.getElementById('nav-nfe'),
   'fixed-bills': document.getElementById('nav-fixed-bills'),
   'protests': document.getElementById('nav-protests'),
+  'integrations': document.getElementById('nav-integrations'),
   'master': document.getElementById('nav-master'),
 };
 
@@ -40,6 +43,7 @@ const viewTitles = {
   'nfe': 'Notas Fiscais Eletrônicas (NFe / Sefaz)',
   'fixed-bills': 'Gestão de Contas Fixas Recorrentes',
   'protests': 'Regularidade Fiscal (Protestos CNPJ)',
+  'integrations': 'Integrações & Modos de Operação',
   'master': 'Painel Master — Administração do Sistema',
 };
 
@@ -48,6 +52,7 @@ async function init() {
   setupLoginEvents();
   setupAccessRequestForm();
   setupFirstAccess();
+  updateProviderBadge();
 
   const cachedUser = sessionStorage.getItem('current_user');
   if (cachedUser) {
@@ -314,6 +319,19 @@ function setupNavigation() {
   });
 }
 
+function updateProviderBadge() {
+  const badge = document.getElementById('provider-badge');
+  const badgeText = document.getElementById('provider-badge-text');
+  if (!badge || !badgeText) return;
+
+  const isReal = config.provider === 'real';
+  const dbMode = 'anon key';
+
+  badgeText.textContent = isReal ? `☁️ REAL · ${dbMode}` : `🧪 MOCK · ${dbMode}`;
+  badge.className = 'badge';
+  badge.classList.add(isReal ? 'badge-success' : 'badge-warning');
+}
+
 function updateRoleUI() {
   if (!roleBadge || !roleBadgeContainer) return;
 
@@ -405,6 +423,8 @@ async function renderActiveView() {
     await renderFixedBills(contentContainer, currentRole, currentObraId);
   } else if (currentView === 'protests') {
     await renderProtests(contentContainer, currentRole, currentObraId);
+  } else if (currentView === 'integrations') {
+    await renderIntegrations(contentContainer);
   } else if (currentView === 'master') {
     await renderMaster(contentContainer, currentUser);
   }

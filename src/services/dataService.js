@@ -62,6 +62,11 @@ export async function checkCnpjStatus(cnpj) { return provider.mockCheckCnpjStatu
 export async function getProtestsByObra(obraId) { return provider.mockGetProtestsByObra(obraId); }
 export async function resolveProtestsForObra(obraId) { return provider.mockResolveProtestsForObra(obraId); }
 
+// Varredura (fixtures/edge) de protestos por CNPJ
+export async function scanProtestsByObra(obraId) {
+  return provider.mockScanProtestsByObra(obraId);
+}
+
 // --- MÓDULO AUTENTICAÇÃO ---
 export async function loginUser(email, senha) { return provider.mockLoginUser(email, senha); }
 export async function submitAccessRequest(data) { return provider.mockSubmitAccessRequest(data); }

@@ -212,3 +212,35 @@ CREATE POLICY "Permitir update anonimo" ON public.solicitacoes_acesso FOR UPDATE
 
 DROP POLICY IF EXISTS "Permitir delete anonimo" ON public.solicitacoes_acesso;
 CREATE POLICY "Permitir delete anonimo" ON public.solicitacoes_acesso FOR DELETE USING (true);
+
+-- Cache de consultas CNPJ.ws (evita rate limit de 3 req/min)
+CREATE TABLE IF NOT EXISTS public.cnpj_cache (
+    cnpj VARCHAR(20) PRIMARY KEY,
+    razao_social VARCHAR(255),
+    situacao VARCHAR(50),
+    data_abertura DATE,
+    porte VARCHAR(50),
+    natureza_juridica VARCHAR(255),
+    cnae VARCHAR(255),
+    logradouro VARCHAR(255),
+    bairro VARCHAR(255),
+    municipio VARCHAR(255),
+    uf VARCHAR(2),
+    cep VARCHAR(10),
+    telefone VARCHAR(50),
+    email VARCHAR(255),
+    response_data JSONB,
+    ultima_consulta TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE public.cnpj_cache ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.cnpj_cache;
+CREATE POLICY "Permitir leitura anonima" ON public.cnpj_cache FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Permitir insert anonimo" ON public.cnpj_cache;
+CREATE POLICY "Permitir insert anonimo" ON public.cnpj_cache FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Permitir update anonimo" ON public.cnpj_cache;
+CREATE POLICY "Permitir update anonimo" ON public.cnpj_cache FOR UPDATE USING (true);

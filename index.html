@@ -156,6 +156,14 @@
             <span>Regularidade (CNPJ)</span>
           </a>
 
+          <a class="menu-item" data-view="integrations" id="nav-integrations">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 6.75h-9m9 0a2.25 2.25 0 0 1 2.25 2.25v10.5A2.25 2.25 0 0 1 16.5 21.75h-9A2.25 2.25 0 0 1 5.25 19.5V9A2.25 2.25 0 0 1 7.5 6.75m9 0V5.25A2.25 2.25 0 0 0 14.25 3h-4.5A2.25 2.25 0 0 0 7.5 5.25v1.5" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 3h6" />
+            </svg>
+            <span>Integrações</span>
+          </a>
+
           <!-- Item Admin Master (oculto por padrão, revelado via JS para role=master) -->
           <div class="menu-category" id="nav-master-category" style="display: none;">Administração</div>
           <a class="menu-item" data-view="master" id="nav-master" style="display: none;">
@@ -203,6 +211,12 @@
                 <span>Rede: Conectada</span>
               </div>
             </div>
+
+            <!-- Provider Badge -->
+            <span class="badge badge-info" id="provider-badge">
+              <span class="badge-dot"></span>
+              <span id="provider-badge-text">Mock</span>
+            </span>
 
             <!-- Seletor Global de Obras (CNPJ) -->
             <div class="profile-selector-container" id="global-obra-container">

@@ -1,14 +1,15 @@
-import { supabase, supabaseAdmin } from '../supabaseClient.js';
+import { supabase } from '../supabaseClient.js';
+import { getIntegrationModes } from '../integrationModes.js';
 
-const db = () => supabaseAdmin || supabase;
+const db = () => supabase;
 
 export async function mockGetObras() {
-  const { data, error } = await supabase.from('obras').select('*').order('created_at', { ascending: false });
+  const { data, error } = await db().from('obras').select('*').order('created_at', { ascending: false });
   if (error) {
     console.error('Erro ao buscar obras:', error);
     return [];
   }
-  const { data: protestosData } = await supabase.from('protestos').select('obra_id').eq('status', 'Ativo');
+  const { data: protestosData } = await db().from('protestos').select('obra_id').eq('status', 'Ativo');
   const obrasComProtestos = new Set((protestosData || []).map(p => p.obra_id));
   return data.map(o => ({
     id: o.id,
@@ -45,7 +46,7 @@ export async function mockDeleteObra(id) {
 }
 
 export async function mockGetRules() {
-  const { data, error } = await supabase.from('contas_fixas').select('*');
+  const { data, error } = await db().from('contas_fixas').select('*');
   if (error) {
     console.error('Erro ao buscar contas fixas:', error);
     return [];
@@ -91,7 +92,7 @@ export async function mockDeleteRule(id) {
 }
 
 export async function mockGetBills() {
-  const { data, error } = await supabase.from('faturas').select('*, contas_fixas(obra_id)');
+  const { data, error } = await db().from('faturas').select('*, contas_fixas(obra_id)');
   if (error) {
     console.error('Erro ao buscar faturas:', error);
     return [];
@@ -129,7 +130,7 @@ export async function mockSaveBill(bill) {
 }
 
 export async function mockGetNFes() {
-  const { data, error } = await supabase.from('notas_fiscais').select('*');
+  const { data, error } = await db().from('notas_fiscais').select('*');
   if (error) {
     console.error('Erro ao buscar notas fiscais:', error);
     return [];
@@ -152,7 +153,44 @@ export async function mockGetNFes() {
 }
 
 export async function mockSyncSefaz(obraId) {
-  throw new Error('Focus NFe API não configurada. Configure VITE_FOCUSNFE_TOKEN no .env');
+  const modes = getIntegrationModes();
+  if (modes.nfe === 'disabled') {
+    throw new Error('Integração NF-e está desativada. Ative em Integrações.');
+  }
+  if (modes.nfe !== 'fixtures') {
+    throw new Error('Integração NF-e via Edge Function ainda não configurada. Use Fixtures em Integrações.');
+  }
+
+  // Fixtures: gera algumas NF-es de exemplo para manter o sistema operacional em desenvolvimento
+  if (!obraId) throw new Error('Obra não informada para sync SEFAZ.');
+
+  const fornecedores = [
+    { nome: 'CIMENTO FORTE LTDA', cnpj: '12.345.678/0001-90' },
+    { nome: 'ACO ESTRUTURAL SA', cnpj: '98.765.432/0001-10' },
+    { nome: 'LOCACAO DE MAQUINAS BR', cnpj: '44.555.666/0001-22' },
+  ];
+
+  const now = Date.now();
+  const novos = Array.from({ length: 3 }).map((_, i) => {
+    const f = fornecedores[i % fornecedores.length];
+    const valor = parseFloat((Math.random() * 45000 + 1200).toFixed(2));
+    const dia = new Date(now - i * 86400000).toISOString().split('T')[0];
+    const chave = String(Math.floor(Math.random() * 1e44)).padStart(44, '0').slice(0, 44);
+    return {
+      obra_id: obraId,
+      chave_acesso: chave,
+      fornecedor: f.nome,
+      cnpj_fornecedor: f.cnpj,
+      valor,
+      data_emissao: dia,
+      status_manifesto: 'Pendente',
+      status_sefaz: 'Autorizada',
+    };
+  });
+
+  const { data, error } = await db().from('notas_fiscais').insert(novos).select();
+  if (error) throw error;
+  return data;
 }
 
 export async function mockManifestNFe(nfeId, type) {
@@ -186,7 +224,7 @@ export async function mockSimulateOCR(category, estimatedValue) {
 }
 
 export async function mockGetHistoricalData(ruleId) {
-  const { data } = await supabase.from('faturas').select('*').eq('conta_fixa_id', ruleId).in('status', ['Pago', 'lancada', 'paga']);
+  const { data } = await db().from('faturas').select('*').eq('conta_fixa_id', ruleId).in('status', ['Pago', 'lancada', 'paga']);
   if (!data) return [];
   return data.map(f => {
     const [ano, mes] = f.mes_referencia.split('-');
@@ -195,6 +233,7 @@ export async function mockGetHistoricalData(ruleId) {
 }
 
 export function mockInitializeData() {
+  console.log('📡 Supabase: client anon key (admin via Edge Functions)');
   console.log('Dados inicializados (Nuvem/Supabase)');
 }
 
@@ -203,12 +242,53 @@ export function mockAddNotification(type, message) {
 }
 
 export async function mockCheckCnpjStatus(cnpj) {
-  throw new Error('CNPJ.ws API não configurada. Configure VITE_DATA_PROVIDER=real no .env');
+  const cleanCnpj = cnpj.replace(/\D/g, '');
+  if (cleanCnpj.length !== 14) {
+    throw new Error('CNPJ inválido. Deve conter 14 dígitos.');
+  }
+
+  try {
+    const { data: cached, error } = await db()
+      .from('cnpj_cache')
+      .select('*')
+      .eq('cnpj', cleanCnpj)
+      .single();
+
+    if (!error && cached) {
+      const cacheAge = Date.now() - new Date(cached.ultima_consulta).getTime();
+      if (cacheAge < 24 * 60 * 60 * 1000) {
+        console.log(`[CNPJ.cache] Dados encontrados em cache para ${cleanCnpj}`);
+        const d = cached.response_data;
+        return {
+          cnpj: cleanCnpj,
+          razaoSocial: d.razao_social || d.nome_fantasia || cached.razao_social || 'N/D',
+          situacao: d.situacao_cadastral || cached.situacao || 'DESCONHECIDA',
+          ultimaAtualizacao: d.data_situacao_cadastral?.split('T')[0] || '',
+          dataAbertura: d.data_abertura?.split('T')[0] || '',
+          porte: d.porte || '',
+          naturezaJuridica: d.natureza_juridica || '',
+          cnae: d.cnae_fiscal_descricao || '',
+          logradouro: d.logradouro || '',
+          bairro: d.bairro || '',
+          municipio: d.municipio || '',
+          uf: d.uf || '',
+          cep: d.cep || '',
+          telefone: d.telefone1 || '',
+          email: d.email || '',
+          protestStatus: (d.situacao_cadastral || cached.situacao) === 'ATIVA' ? 'clean' : 'dirty',
+        };
+      }
+    }
+  } catch (e) {
+    console.warn('[CNPJ.cache] Erro ao consultar cache:', e.message);
+  }
+
+  throw new Error('CNPJ não encontrado em cache. Ative VITE_DATA_PROVIDER=real para consultar CNPJ.ws');
 }
 
 export async function mockGetProtestsByObra(obraId) {
   if (!obraId) return [];
-  const { data, error } = await supabase.from('protestos').select('*').eq('obra_id', obraId);
+  const { data, error } = await db().from('protestos').select('*').eq('obra_id', obraId);
   if (error) {
     console.error('Erro ao buscar protestos:', error);
     return [];
@@ -239,6 +319,38 @@ export async function mockResolveProtestsForObra(obraId) {
   return true;
 }
 
+export async function mockScanProtestsByObra(obraId) {
+  const modes = getIntegrationModes();
+  if (modes.protests === 'disabled') {
+    throw new Error('Integração de protestos está desativada. Ative em Integrações.');
+  }
+  if (modes.protests !== 'fixtures') {
+    throw new Error('Integração de protestos via Edge Function ainda não configurada. Use Fixtures em Integrações.');
+  }
+
+  if (!obraId) throw new Error('Obra não informada para varredura.');
+
+  // Fixtures: insere 0-2 protestos ativos aleatórios para esta obra
+  const count = Math.random() < 0.55 ? 0 : (Math.random() < 0.75 ? 1 : 2);
+  if (count === 0) return { inserted: 0 };
+
+  const cartorios = ['1º Tabelionato - SP', '2º Tabelionato - SP', 'Cartório Central - SP'];
+  const credores = ['BANCO XYZ', 'FORNECEDOR ALFA', 'DISTRIBUIDORA BETA'];
+
+  const items = Array.from({ length: count }).map(() => ({
+    obra_id: obraId,
+    cartorio: cartorios[Math.floor(Math.random() * cartorios.length)],
+    valor: parseFloat((Math.random() * 9000 + 300).toFixed(2)),
+    data_protesto: new Date(Date.now() - 86400000 * (Math.floor(Math.random() * 60) + 1)).toISOString().split('T')[0],
+    status: 'Ativo',
+    credor: credores[Math.floor(Math.random() * credores.length)],
+  }));
+
+  const { error } = await db().from('protestos').insert(items);
+  if (error) throw error;
+  return { inserted: items.length };
+}
+
 export async function mockLoginUser(email, senha) {
   if (!email || !senha) return null;
 
@@ -256,7 +368,7 @@ export async function mockLoginUser(email, senha) {
   }
 
   // 2. Busca o registro na tabela usuarios (por email, coluna sempre existe)
-  const { data, error } = await supabase
+  const { data, error } = await db()
     .from('usuarios')
     .select('*')
     .eq('email', email)
@@ -301,7 +413,7 @@ export async function mockSubmitAccessRequest({ nome, email, obra, mensagem }) {
 }
 
 export async function mockGetAccessRequests() {
-  const { data, error } = await supabase
+  const { data, error } = await db()
     .from('solicitacoes_acesso')
     .select('*')
     .order('created_at', { ascending: false });
@@ -327,7 +439,7 @@ export async function mockUpdateAccessRequest(id, updates) {
 }
 
 export async function mockGetUsuarios() {
-  const { data, error } = await supabase
+  const { data, error } = await db()
     .from('usuarios')
     .select('*')
     .order('nome', { ascending: true });
@@ -347,30 +459,16 @@ export async function mockGetUsuarios() {
 export async function mockCreateUsuario({ nome, email, senha, role, obraId }) {
   const iniciais = nome.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase();
 
-  // 1. Tenta criar no Supabase Auth
-  if (supabaseAdmin) {
-    try {
-      await supabaseAdmin.auth.admin.createUser({
-        email,
-        password: senha,
-        email_confirm: true,
-        user_metadata: { nome, role }
-      });
-    } catch (e) {
-      if (!e.message?.includes('already been registered')) {
-        console.warn('Auth não disponível, criando apenas na tabela:', e.message);
-      }
-    }
-  }
-
-  // 2. Insere na tabela usuarios (apenas colunas existentes no schema atual)
-  const db = supabaseAdmin || supabase;
-  const { data, error } = await db.from('usuarios').upsert({
-    nome, email, senha, role,
+  // Segurança: criação de usuários deve ser via Edge Function (service_role), não no browser.
+  // Mantém operacional em dev: cria apenas o perfil local (sem senha) se já existir no Auth.
+  const { data, error } = await db().from('usuarios').upsert({
+    nome,
+    email,
+    role,
     avatar_iniciais: iniciais,
   }, { onConflict: 'email' }).select();
   if (error) throw error;
-  return data[0];
+  return data?.[0] || null;
 }
 
 export async function mockUpdateUsuario(id, updates) {

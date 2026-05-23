@@ -1,4 +1,6 @@
 import { supabase } from './supabaseClient.js';
+import { getIntegrationModes } from './integrationModes.js';
+import { invokeEdge } from './edgeFunctions.js';
 
 if (!supabase) {
   console.error("ERRO CRÍTICO: Cliente Supabase não inicializado. Verifique seu arquivo .env.");
@@ -57,6 +59,19 @@ export async function linkDDAToFixedBill(ddaId, ruleId) {
 }
 
 export async function syncDDABaaS(obraId) {
+  const modes = getIntegrationModes();
+  if (modes.dda === 'disabled') {
+    throw new Error('Integração DDA está desativada. Ative em Integrações.');
+  }
+  // Enquanto não há Edge Function/credenciais, fixtures mantém o sistema operacional
+  if (modes.dda === 'edge') {
+    const res = await invokeEdge('dda-sync', { obraId });
+    return res;
+  }
+  if (modes.dda !== 'fixtures') {
+    throw new Error('Modo DDA inválido. Ajuste em Integrações.');
+  }
+
   return new Promise(resolve => {
     setTimeout(async () => {
       const novoBoleto = {
