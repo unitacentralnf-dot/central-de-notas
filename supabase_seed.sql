@@ -95,8 +95,8 @@ INSERT INTO public.protestos (obra_id, cartorio, valor, data_protesto, status, c
 
 -- 8. Inserindo Usuários Master do Sistema
 INSERT INTO public.usuarios (id, nome, email, senha, role, avatar_iniciais) VALUES
-('u111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9u1', 'Carlos Silva', 'master@unita.com.br', 'masterunita2026', 'adm', 'CS'),
-('u222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9u2', 'Eng. Roberto Dias', 'roberto@unita.com.br', 'robertounita2026', 'engenheiro', 'RD'),
-('u333e8d3-5b8d-4e29-a1b7-a3f8c8d8b9u3', 'Mariana Lins', 'mariana@unita.com.br', 'marianaunita2026', 'financeiro', 'ML'),
-('u444e8d3-5b8d-4e29-a1b7-a3f8c8d8b9u4', 'Arthur Albuquerque', 'arthur@unita.com.br', 'arthurunita2026', 'ggo', 'AA')
+('a111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1', 'Carlos Silva', 'master@unita.com.br', 'masterunita2026', 'adm', 'CS'),
+('a222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a2', 'Eng. Roberto Dias', 'roberto@unita.com.br', 'robertounita2026', 'engenheiro', 'RD'),
+('a333e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a3', 'Mariana Lins', 'mariana@unita.com.br', 'marianaunita2026', 'financeiro', 'ML'),
+('a444e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a4', 'Arthur Albuquerque', 'arthur@unita.com.br', 'arthurunita2026', 'ggo', 'AA')
 ON CONFLICT (id) DO NOTHING;
