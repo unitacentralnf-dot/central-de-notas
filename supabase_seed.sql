@@ -3,6 +3,22 @@
 -- EXECUTE ESTE ARQUIVO DIRETAMENTE NO 'SQL EDITOR' DO SUPABASE
 -- =======================================================================================
 
+-- 0. Criação da tabela de usuários (caso ainda não exista)
+CREATE TABLE IF NOT EXISTS public.usuarios (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    avatar_iniciais VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.usuarios;
+CREATE POLICY "Permitir leitura anonima" ON public.usuarios FOR SELECT USING (true);
+
 -- 1. Limpeza opcional (cuidado, apaga os dados existentes nestas tabelas)
 -- Descomente as linhas abaixo se quiser limpar o banco antes de injetar os dados falsos.
 -- TRUNCATE TABLE boletos_dda CASCADE;
