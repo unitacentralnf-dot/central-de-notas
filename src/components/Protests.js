@@ -1,4 +1,4 @@
-import { getObras, saveObra, addNotification, getProtestsByObra, resolveProtestsForObra } from '../services/dataService.js';
+import { getObras, saveObra, addNotification, getProtestsByObra, resolveProtestsForObra, checkCnpjStatus } from '../services/dataService.js';
 
 let activeObraId = '';
 let scanResult = null; 
@@ -139,22 +139,35 @@ async function runScanSimulation(container, currentRole) {
     globalObraSelect.setAttribute('disabled', 'true');
   }
 
-  // Simular requisição de 2 segundos
-  await new Promise(r => setTimeout(r, 2000));
-  
+  // Consultar CNPJ.ws (ou mock) via dataService
   const obras = await getObras();
   const selectedObra = obras.find(o => o.id === activeObraId);
-  
+
   if (selectedObra) {
-    selectedObra.lastProtestCheck = new Date().toISOString();
-    selectedObra.protestStatus = selectedObra.name === 'Residencial Bella Vista' ? 'dirty' : 'clean';
-    await saveObra(selectedObra); // Salva o status simulado no Supabase para o teste
+    try {
+      const result = await checkCnpjStatus(selectedObra.cnpj);
+      selectedObra.lastProtestCheck = new Date().toISOString();
+      selectedObra.protestStatus = result.protestStatus;
+
+      // Se API retornou dados da empresa, armazenar no resultado
+      scanResult = result;
+
+      await saveObra(selectedObra);
+      addNotification('info', `LOG: Consulta CNPJ.ws concluída para ${selectedObra.cnpj} — Situação: ${result.situacao}`);
+    } catch (err) {
+      console.error('Falha na consulta CNPJ:', err);
+      addNotification('error', `ERRO: Falha ao consultar CNPJ — ${err.message}`);
+      // Fallback: marca como clean para não bloquear
+      selectedObra.lastProtestCheck = new Date().toISOString();
+      selectedObra.protestStatus = 'clean';
+      await saveObra(selectedObra);
+    }
   }
-  
+
   if (globalObraSelect) {
     globalObraSelect.removeAttribute('disabled');
   }
-  
+
   await renderProtests(container, currentRole, activeObraId);
 }
 
@@ -186,6 +199,22 @@ function renderStatusPanelHtml(obra, detailsHtml, isAdm) {
   const isDirty = obra.protestStatus === 'dirty';
   
   if (!isDirty) {
+    const cnpjInfo = scanResult?.situacao ? `
+      <div style="margin-top: 20px; background: hsl(var(--bg-input)); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 16px; text-align: left; max-width: 380px; margin-inline: auto;">
+        <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--text-dim)); margin-bottom: 8px;">Dados da Consulta CNPJ.ws</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 0.78rem;">
+          <span style="color: hsl(var(--text-muted));">Situação:</span>
+          <span style="color: hsl(var(--color-success)); font-weight: 600;">${scanResult.situacao}</span>
+          <span style="color: hsl(var(--text-muted));">Razão Social:</span>
+          <span style="color: white;">${scanResult.razaoSocial}</span>
+          ${scanResult.cnae ? `<span style="color: hsl(var(--text-muted));">CNAE:</span><span style="color: white;">${scanResult.cnae}</span>` : ''}
+          ${scanResult.municipio ? `<span style="color: hsl(var(--text-muted));">Município:</span><span style="color: white;">${scanResult.municipio}/${scanResult.uf}</span>` : ''}
+          <span style="color: hsl(var(--text-muted));">Atualização:</span>
+          <span style="color: white;">${scanResult.ultimaAtualizacao}</span>
+        </div>
+      </div>
+    ` : '';
+
     return `
       <div class="panel-header">
         <h2 class="panel-title">Resultado da Análise</h2>
@@ -200,17 +229,31 @@ function renderStatusPanelHtml(obra, detailsHtml, isAdm) {
         <p style="color: hsl(var(--text-muted)); font-size: 0.9rem; max-width: 320px; margin-inline: auto; line-height: 1.4;">
           Nenhum protesto de título foi identificado para a obra <strong>${obra.name}</strong> nas consultas mais recentes.
         </p>
+        ${cnpjInfo}
       </div>
     `;
   }
 
   // Se tiver protesto ativo
+  const cnpjInfo = scanResult?.situacao ? `
+    <div style="background: hsl(var(--bg-input)); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 14px; margin-bottom: 24px;">
+      <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--text-dim)); margin-bottom: 6px;">Situação Cadastral CNPJ.ws</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 0.78rem;">
+        <span style="color: hsl(var(--text-muted));">Situação:</span>
+        <span style="color: hsl(var(--color-danger)); font-weight: 600;">${scanResult.situacao}</span>
+        <span style="color: hsl(var(--text-muted));">Razão Social:</span>
+        <span style="color: white;">${scanResult.razaoSocial}</span>
+      </div>
+    </div>
+  ` : '';
+
   return `
     <div class="panel-header">
       <h2 class="panel-title" style="color: hsl(var(--color-danger));">⚠️ Restrições Fiscais Encontradas</h2>
     </div>
     
     <div class="animate-fade-in">
+      ${cnpjInfo}
       <div style="background-color: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.3); padding: 16px; border-radius: var(--radius-md); text-align: center; color: hsl(var(--color-danger)); font-weight: 600; margin-bottom: 24px; font-size: 0.9rem; line-height: 1.4;">
         Atenção: Existem protestos ativos que podem inviabilizar o crédito comercial da obra e travar fornecedores de insumos críticos.
       </div>
@@ -246,37 +289,3 @@ function renderStatusPanelHtml(obra, detailsHtml, isAdm) {
   `;
 }
 
-// HTML dos protestos detalhados (Mock)
-function getProtestDetailsHtml(cnpj) {
-  // Apenas simulando os mesmos dados cadastrados no dataService para Bella Vista
-  const mockProtests = [
-    {
-      creditor: 'FORNECEDOR DE AÇO SUL S/A',
-      value: 12450.00,
-      date: '2026-04-12',
-      notary: '2º Cartório de Protesto de Títulos de Curitiba',
-      reason: 'Duplicata de Venda Mercantil não Paga'
-    },
-    {
-      creditor: 'LOCADORA DE EQUIPAMENTOS MAQMAX LTDA',
-      value: 4800.00,
-      date: '2026-05-02',
-      notary: '5º Cartório de Protesto de Títulos de Curitiba',
-      reason: 'Duplicata de Serviços'
-    }
-  ];
-
-  return mockProtests.map(p => `
-    <div style="background-color: hsl(var(--bg-input)); border: 1px solid var(--border-light); padding: 16px; border-radius: var(--radius-sm); font-size: 0.85rem; line-height: 1.4;">
-      <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 600; color: white;">
-        <span>Credor: ${p.creditor}</span>
-        <span style="color: hsl(var(--color-danger));">${p.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-      </div>
-      <div style="color: hsl(var(--text-muted)); font-size: 0.8rem;">
-        <div>Cartório: <strong>${p.notary}</strong></div>
-        <div>Data Protesto: <strong>${new Date(p.date).toLocaleDateString('pt-BR')}</strong></div>
-        <div>Motivo/Origem: <strong>${p.reason}</strong></div>
-      </div>
-    </div>
-  `).join('');
-}

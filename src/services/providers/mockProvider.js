@@ -255,6 +255,30 @@ export function mockAddNotification(type, message) {
   console.log(`[Notification - ${type}] ${message}`);
 }
 
+export async function mockCheckCnpjStatus(cnpj) {
+  await new Promise(r => setTimeout(r, 1500));
+  const digito = cnpj.replace(/\D/g, '').slice(-1);
+  const ativo = parseInt(digito) > 3;
+  return {
+    cnpj,
+    razaoSocial: ativo ? 'Construtora UNITA Ltda' : 'Construtora UNITA Ltda - EM RECUPERACAO',
+    situacao: ativo ? 'ATIVA' : 'SUSPENSA',
+    ultimaAtualizacao: new Date().toISOString().split('T')[0],
+    dataAbertura: '2018-03-15',
+    porte: 'DEMAIS',
+    naturezaJuridica: '213-5 - Sociedade Empresária Limitada',
+    cnae: '4120-4/00 - Construção de edifícios',
+    logradouro: 'Av. Paulista, 1000',
+    bairro: 'Bela Vista',
+    municipio: 'São Paulo',
+    uf: 'SP',
+    cep: '01310-100',
+    telefone: '(11) 99999-0000',
+    email: 'contato@unita.com.br',
+    protestStatus: ativo ? 'clean' : 'dirty',
+  };
+}
+
 export async function mockGetProtestsByObra(obraId) {
   if (!obraId) return [];
   const { data, error } = await supabase.from('protestos').select('*').eq('obra_id', obraId);

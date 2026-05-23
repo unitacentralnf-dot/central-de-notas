@@ -58,6 +58,7 @@ export function initializeData() { provider.mockInitializeData(); }
 export function addNotification(type, message) { provider.mockAddNotification(type, message); }
 
 // --- MÓDULO PROTESTOS ---
+export async function checkCnpjStatus(cnpj) { return provider.mockCheckCnpjStatus(cnpj); }
 export async function getProtestsByObra(obraId) { return provider.mockGetProtestsByObra(obraId); }
 export async function resolveProtestsForObra(obraId) { return provider.mockResolveProtestsForObra(obraId); }
 

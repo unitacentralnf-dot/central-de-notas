@@ -12,7 +12,77 @@ import {
   mockLoginUser, mockSubmitAccessRequest,
   mockGetAccessRequests, mockUpdateAccessRequest,
   mockGetUsuarios, mockCreateUsuario, mockUpdateUsuario, mockDeleteUsuario,
+  mockCheckCnpjStatus,
 } from './mockProvider.js';
+
+// -------------------------------------------------------------------
+// CNPJ.ws — Consulta Cadastral Real
+// Docs: https://publica.cnpj.ws
+// Gratuita, sem autenticação, 3 req/min (respeitar rate limit)
+// -------------------------------------------------------------------
+export async function realCheckCnpjStatus(cnpj) {
+  const cleanCnpj = cnpj.replace(/\D/g, '');
+  if (cleanCnpj.length !== 14) {
+    throw new Error('CNPJ inválido. Deve conter 14 dígitos.');
+  }
+
+  const url = `https://publica.cnpj.ws/cnpj/${cleanCnpj}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+    });
+
+    if (!response.ok) {
+      // CNPJ.ws retorna 404 se CNPJ não encontrado, 429 se rate limit
+      if (response.status === 404) {
+        return {
+          cnpj: cleanCnpj,
+          razaoSocial: 'CNPJ NÃO ENCONTRADO',
+          situacao: 'INEXISTENTE',
+          ultimaAtualizacao: new Date().toISOString().split('T')[0],
+        };
+      }
+      if (response.status === 429) {
+        console.warn('CNPJ.ws: Rate limit atingido. Usando fallback mock.');
+        throw new Error('Rate limit exceeded');
+      }
+      throw new Error(`CNPJ.ws HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    return {
+      cnpj: data.cnpj,
+      razaoSocial: data.razao_social || data.nome_fantasia || 'N/D',
+      situacao: data.situacao_cadastral || 'DESCONHECIDA',
+      ultimaAtualizacao: data.data_situacao_cadastral
+        ? data.data_situacao_cadastral.split('T')[0]
+        : new Date().toISOString().split('T')[0],
+      dataAbertura: data.data_abertura?.split('T')[0] || '',
+      porte: data.porte || '',
+      naturezaJuridica: data.natureza_juridica || '',
+      cnae: data.cnae_fiscal_descricao || '',
+      logradouro: data.logradouro || '',
+      bairro: data.bairro || '',
+      municipio: data.municipio || '',
+      uf: data.uf || '',
+      cep: data.cep || '',
+      telefone: data.telefone1 || '',
+      email: data.email || '',
+      protestStatus: data.situacao_cadastral === 'ATIVA' ? 'clean' : 'dirty',
+    };
+  } catch (err) {
+    if (err.message === 'Rate limit exceeded') {
+      // Fallback automático para o mock em caso de rate limit
+      const mock = await mockCheckCnpjStatus(cnpj);
+      return mock;
+    }
+    console.error('Erro ao consultar CNPJ.ws:', err);
+    throw err;
+  }
+}
 
 // -------------------------------------------------------------------
 // PROVEDOR REAL
