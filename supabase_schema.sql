@@ -57,16 +57,44 @@ CREATE TABLE IF NOT EXISTS public.notas_fiscais (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Criação da tabela de DDA (Débito Direto Autorizado)
+CREATE TABLE IF NOT EXISTS public.boletos_dda (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    obra_id UUID REFERENCES public.obras(id) ON DELETE CASCADE,
+    emissor_nome VARCHAR(255) NOT NULL,
+    emissor_cnpj VARCHAR(20) NOT NULL,
+    valor DECIMAL(10,2) NOT NULL,
+    data_vencimento DATE NOT NULL,
+    linha_digitavel VARCHAR(255) NOT NULL,
+    status_dda VARCHAR(50) DEFAULT 'Pendente', -- Pendente, Vinculado_NFe, Vinculado_ContaFixa, Rejeitado
+    nfe_vinculada_id UUID REFERENCES public.notas_fiscais(id) ON DELETE SET NULL,
+    conta_fixa_vinculada_id UUID REFERENCES public.contas_fixas(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Configurando RLS (Row Level Security) - Pode ser ajustado conforme a necessidade
 ALTER TABLE public.obras ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contas_fixas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.faturas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.protestos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notas_fiscais ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.boletos_dda ENABLE ROW LEVEL SECURITY;
 
 -- Políticas temporárias para permitir acesso total anônimo (só para testes iniciais)
+DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.obras;
 CREATE POLICY "Permitir leitura anonima" ON public.obras FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.contas_fixas;
 CREATE POLICY "Permitir leitura anonima" ON public.contas_fixas FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.faturas;
 CREATE POLICY "Permitir leitura anonima" ON public.faturas FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.protestos;
 CREATE POLICY "Permitir leitura anonima" ON public.protestos FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.notas_fiscais;
 CREATE POLICY "Permitir leitura anonima" ON public.notas_fiscais FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.boletos_dda;
+CREATE POLICY "Permitir leitura anonima" ON public.boletos_dda FOR SELECT USING (true);

@@ -1,18 +1,18 @@
 import { getObras, getBillsForPeriod, getNotifications, getRules, dispatchManualAlert, runCronCheckAlerts } from '../services/dataService.js';
 import { setGlobalObra } from '../main.js';
 
-export function renderDashboard(container, currentRole, activeObraId) {
-  // Executar a verificação de alertas simulando o cron antes de carregar
-  runCronCheckAlerts();
+export async function renderDashboard(container, currentRole, activeObraId) {
+  // Executar a verificação de alertas
+  await runCronCheckAlerts();
 
-  const obras = getObras();
+  const obras = await getObras();
   const hoje = new Date();
   const mesStr = '05'; // Maio fixado para o protótipo
   const anoStr = '2026';
   
-  const bills = getBillsForPeriod(mesStr, anoStr);
-  const notifications = getNotifications();
-  const rules = getRules();
+  const bills = await getBillsForPeriod(mesStr, anoStr);
+  const notifications = await getNotifications();
+  const rules = await getRules();
 
   // 1. Calcular Métricas para os Cards
   const totalObras = obras.length;
@@ -236,17 +236,17 @@ export function renderDashboard(container, currentRole, activeObraId) {
 
   // 2. Disparar cobrança direta manual
   container.querySelectorAll('.manual-alert-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       const billId = e.currentTarget.getAttribute('data-bill');
       let senderName = 'Consultor';
       if (currentRole === 'ggo') senderName = 'GGO / Diretor';
       if (currentRole === 'engenheiro') senderName = 'Engenheiro';
       if (currentRole === 'financeiro') senderName = 'Financeiro';
 
-      const success = dispatchManualAlert(billId, senderName);
+      const success = await dispatchManualAlert(billId, senderName);
       if (success) {
         // Recarregar a tela para atualizar o log e os botões
-        renderDashboard(container, currentRole, activeObraId);
+        await renderDashboard(container, currentRole, activeObraId);
       }
     });
   });

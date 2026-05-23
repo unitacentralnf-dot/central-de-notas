@@ -63,17 +63,18 @@ function renderActiveTabContent(currentRole, activeObraId) {
 
   if (activeTab === 'monthly') {
     renderMonthlyView(container, currentRole, activeObraId);
+    await renderMonthlyView(tabContainer, currentRole, activeObraId);
   } else {
-    renderRulesView(container, currentRole, activeObraId);
+    await renderRulesView(tabContainer, currentRole, activeObraId);
   }
 }
 
 // --- ABA 1: ACOMPANHAMENTO MENSAL ---
-function renderMonthlyView(container, currentRole, activeObraId) {
-  const obras = getObras();
+async function renderMonthlyView(container, currentRole, activeObraId) {
+  const obras = await getObras();
   const selectedObra = obras.find(o => o.id === activeObraId);
-  const bills = getBillsForPeriod(activeMes, activeAno, activeObraId);
-  const rules = getRules();
+  const bills = await getBillsForPeriod(activeMes, activeAno, activeObraId);
+  const rules = await getRules();
 
   const fmt = (v) => v ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00';
 
@@ -238,18 +239,18 @@ function renderMonthlyView(container, currentRole, activeObraId) {
   container.innerHTML = html;
 
   // Evento dos Filtros
-  document.getElementById('filter-period').addEventListener('change', (e) => {
+  document.getElementById('filter-period').addEventListener('change', async (e) => {
     const val = e.target.value;
     const parts = val.split('/');
     activeMes = parts[0];
     activeAno = parts[1];
-    renderMonthlyView(container, currentRole, activeObraId);
+    await renderMonthlyView(container, currentRole, activeObraId);
   });
 
 
   // Cobrança manual
   container.querySelectorAll('.manual-cobrar-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation(); // Evita abrir o modal do card
       const billId = e.currentTarget.getAttribute('data-bill');
       let roleName = 'Consultor';
@@ -257,8 +258,8 @@ function renderMonthlyView(container, currentRole, activeObraId) {
       if (currentRole === 'engenheiro') roleName = 'Engenheiro';
       if (currentRole === 'financeiro') roleName = 'Financeiro';
 
-      dispatchManualAlert(billId, roleName);
-      renderMonthlyView(container, currentRole);
+      await dispatchManualAlert(billId, roleName);
+      await renderMonthlyView(container, currentRole, activeObraId);
     });
   });
 
@@ -269,9 +270,9 @@ function renderMonthlyView(container, currentRole, activeObraId) {
       const action = e.currentTarget.getAttribute('data-action');
       
       if (action === 'upload') {
-        openUploadModal(billId, currentRole);
+        openUploadModal(billId, currentRole, activeObraId, container);
       } else if (action === 'process') {
-        openProcessModal(billId, currentRole);
+        openProcessModal(billId, currentRole, activeObraId, container);
       } else {
         openViewOnlyModal(billId);
       }
@@ -280,9 +281,9 @@ function renderMonthlyView(container, currentRole, activeObraId) {
 }
 
 // --- ABA 2: LISTAGEM DE REGRAS E GRÁFICOS DE CONSUMO ---
-function renderRulesView(container, currentRole) {
-  const rules = getRules();
-  const obras = getObras();
+async function renderRulesView(container, currentRole, activeObraId) {
+  const rules = await getRulesByObra(activeObraId);
+  const obras = await getObras();
   const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   const isAdm = currentRole === 'adm';
@@ -358,49 +359,49 @@ function renderRulesView(container, currentRole) {
   // Lógica de Nova Regra (ADM)
   if (isAdm) {
     document.getElementById('btn-add-rule').addEventListener('click', () => {
-      openRuleModal(null);
+      openRuleModal(null, container, currentRole, activeObraId);
     });
   }
 
   // Deletar regra (ADM)
   container.querySelectorAll('.btn-delete-rule').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       const id = e.currentTarget.getAttribute('data-id');
       if (confirm('Tem certeza que deseja excluir esta regra de conta fixa?')) {
-        deleteRule(id);
-        renderRulesView(container, currentRole);
+        await deleteRule(id);
+        await renderRulesView(container, currentRole, activeObraId);
       }
     });
   });
 
   // Mostrar gráfico de consumo
   container.querySelectorAll('.btn-view-chart').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       const id = e.currentTarget.getAttribute('data-id');
       selectedHistoryRuleId = id;
-      renderChartPanel(id);
+      await renderChartPanel(id);
     });
   });
 
   // Se já tiver uma regra selecionada anteriormente, re-renderiza o gráfico
   if (selectedHistoryRuleId) {
-    renderChartPanel(selectedHistoryRuleId);
+    await renderChartPanel(selectedHistoryRuleId);
   }
 }
 
 // Renderiza o gráfico de consumo de uma regra de conta fixa
-function renderChartPanel(ruleId) {
+async function renderChartPanel(ruleId) {
   const chartContainer = document.getElementById('chart-content-area');
   const chartTitle = document.getElementById('chart-panel-title');
   if (!chartContainer) return;
 
-  const rules = getRules();
+  const rules = await getRules();
   const rule = rules.find(r => r.id === ruleId);
   if (!rule) return;
 
   chartTitle.textContent = `Consumo: ${rule.name}`;
 
-  const history = getHistoricalData(ruleId);
+  const history = await getHistoricalData(ruleId);
   
   // Próximos meses projetados
   const projMeses = [];
@@ -489,7 +490,7 @@ function renderChartPanel(ruleId) {
 // --- MODAIS DO MÓDULO ---
 
 // 1. Modal para Criar/Editar Regra (ADM)
-function openRuleModal(rule = null) {
+function openRuleModal(rule = null, viewContainer, currentRole, activeObraId) {
   const modal = document.getElementById('global-modal');
   const modalTitle = document.getElementById('modal-title');
   const modalBody = document.getElementById('modal-body');
@@ -575,11 +576,11 @@ function openRuleModal(rule = null) {
   document.getElementById('btn-close-modal').addEventListener('click', close);
   document.getElementById('close-modal-btn').addEventListener('click', close);
 
-  document.getElementById('btn-save-rule-submit').addEventListener('click', () => {
+  document.getElementById('btn-save-rule-submit').addEventListener('click', async () => {
     const form = document.getElementById('rule-form');
     if (!form.reportValidity()) return;
 
-    const saved = saveRule({
+    const saved = await saveRule({
       id: document.getElementById('rule-id').value || null,
       name: document.getElementById('rule-name-input').value,
       category: document.getElementById('rule-category-input').value,
@@ -594,22 +595,20 @@ function openRuleModal(rule = null) {
     addNotification('info', `LOG: Regra de Conta Fixa [${saved.name}] salva com sucesso no sistema pelo Administrador.`);
     close();
     
-    // Recarrega a aba de regras
-    const mainViewContainer = document.getElementById('content-container');
-    renderActiveTabContent(currentRole);
+    await renderRulesView(viewContainer, currentRole, activeObraId);
   });
 }
 
 // 2. Modal de Upload e OCR Simulado (ADM / Consultor)
-function openUploadModal(billId, currentRole) {
+async function openUploadModal(billId, currentRole, activeObraId, viewContainer) {
   const modal = document.getElementById('global-modal');
   const modalTitle = document.getElementById('modal-title');
   const modalBody = document.getElementById('modal-body');
   const modalFooter = document.getElementById('modal-footer');
   
-  const bills = getBillsForPeriod(activeMes, activeAno, activeObraId);
+  const bills = await getBillsForPeriod(activeMes, activeAno, activeObraId);
   const bill = bills.find(b => b.id === billId);
-  const rules = getRules();
+  const rules = await getRules();
   const rule = rules.find(r => r.id === bill.ruleId);
   
   if (!bill || !rule) return;
@@ -733,9 +732,9 @@ function openUploadModal(billId, currentRole) {
       </div>
     `;
     
-    // Simula tempo de leitura de 2 segundos
-    setTimeout(() => {
-      const ocrResult = simulateOCR(rule.category, bill.valorEstimado);
+    // Simula tempo de leitura de OCR
+    setTimeout(async () => {
+      const ocrResult = await simulateOCR(rule.category, bill.valorEstimado);
       
       // Volta o texto original
       ocrZone.innerHTML = `
@@ -753,20 +752,22 @@ function openUploadModal(billId, currentRole) {
       const barInput = document.getElementById('bill-barcode-input');
       const btnSave = document.getElementById('btn-save-bill-upload');
       
-      if(valInput) valInput.value = ocrResult.value;
-      if(dateInput) dateInput.value = ocrResult.dueDate;
+      if(valInput) valInput.value = ocrResult.realValue;
+      if(dateInput) dateInput.value = ocrResult.dueRealDate;
       if(barInput) barInput.value = ocrResult.barcode;
       if(btnSave) btnSave.removeAttribute('disabled');
 
       // Verifica anomalia
       const anomalyContainer = document.getElementById('anomaly-alert-container');
+      const isAnomaly = ocrResult.realValue > (bill.valorEstimado * 1.2);
       if (anomalyContainer) {
-        if (ocrResult.isAnomaly) {
+        if (isAnomaly) {
+          const anomalyPercentage = Math.round(((ocrResult.realValue - bill.valorEstimado)/bill.valorEstimado)*100);
           anomalyContainer.style.display = 'block';
           anomalyContainer.innerHTML = `
             <div style="background-color: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); padding: 12px; border-radius: var(--radius-sm); color: hsl(var(--color-warning)); font-size: 0.8rem; line-height: 1.4;">
               ⚠️ <strong>DESVIO DE CONSUMO DETECTADO!</strong><br>
-              O valor identificado (${ocrResult.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}) é <strong>${ocrResult.anomalyPercentage}% superior</strong> ao orçamento de referência (${bill.valorEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}).<br>
+              O valor identificado (${ocrResult.realValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}) é <strong>${anomalyPercentage}% superior</strong> ao orçamento de referência (${bill.valorEstimado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}).<br>
               Recomenda-se que o engenheiro fiscalize vazamentos no local.
             </div>
           `;
@@ -785,7 +786,7 @@ function openUploadModal(billId, currentRole) {
   });
 
   // Salvar
-  document.getElementById('btn-save-bill-upload').addEventListener('click', () => {
+  document.getElementById('btn-save-bill-upload').addEventListener('click', async () => {
     const valInput = document.getElementById('bill-value-input');
     const dateInput = document.getElementById('bill-date-input');
     const barInput = document.getElementById('bill-barcode-input');
@@ -798,34 +799,33 @@ function openUploadModal(billId, currentRole) {
     bill.codigoBarras = barInput.value;
     bill.comprovante = 'fatura_anexada_automatica.pdf';
 
-    saveBill(bill);
+    await saveBill(bill);
     
     // Logar atividade
     const isAnomaly = bill.valorReal > (bill.valorEstimado * 1.2);
     let logMsg = `LOG: Fatura de [${rule.name}] de Maio/2026 enviada pelo ADM da Obra. Valor Real: R$ ${bill.valorReal.toFixed(2)}.`;
     if (isAnomaly) {
       logMsg += ` ⚠️ ALERTA: Desvio de custo na obra de +${Math.round(((bill.valorReal - bill.valorEstimado)/bill.valorEstimado)*100)}%!`;
-      addNotification('warning', logMsg);
+      // addNotification('warning', logMsg);
     } else {
-      addNotification('success', logMsg);
+      // addNotification('success', logMsg);
     }
 
     close();
-    const tabContainer = document.getElementById('tab-content-container');
-    renderMonthlyView(tabContainer, currentRole);
+    await renderMonthlyView(viewContainer, currentRole, activeObraId);
   });
 }
 
 // 3. Modal de Registrar Lançamento/Pagamento (ADM / Consultor)
-function openProcessModal(billId, currentRole) {
+async function openProcessModal(billId, currentRole, activeObraId, viewContainer) {
   const modal = document.getElementById('global-modal');
   const modalTitle = document.getElementById('modal-title');
   const modalBody = document.getElementById('modal-body');
   const modalFooter = document.getElementById('modal-footer');
   
-  const bills = getBillsForPeriod(activeMes, activeAno, activeObraId);
+  const bills = await getBillsForPeriod(activeMes, activeAno, activeObraId);
   const bill = bills.find(b => b.id === billId);
-  const rules = getRules();
+  const rules = await getRules();
   const rule = rules.find(r => r.id === bill.ruleId);
   
   if (!bill || !rule) return;
@@ -875,12 +875,11 @@ function openProcessModal(billId, currentRole) {
     document.getElementById('btn-close-modal').addEventListener('click', close);
     document.getElementById('close-modal-btn').addEventListener('click', close);
     
-    document.getElementById('btn-cobrar-fin-modal').addEventListener('click', () => {
+    document.getElementById('btn-cobrar-fin-modal').addEventListener('click', async () => {
       const msg = `COBRANÇA FINANCEIRO (${currentRole.toUpperCase()}): Fatura de [${rule.name}] já foi enviada pelo canteiro, mas ainda não consta como integrada no banco. Cobrança enviada ao Financeiro.`;
       addNotification('warning', msg);
       close();
-      const tabContainer = document.getElementById('tab-content-container');
-      renderMonthlyView(tabContainer, currentRole);
+      await renderMonthlyView(viewContainer, currentRole, activeObraId);
     });
     return;
   }
@@ -956,7 +955,7 @@ function openProcessModal(billId, currentRole) {
   });
 
   // Salvar
-  document.getElementById('btn-process-submit').addEventListener('click', () => {
+  document.getElementById('btn-process-submit').addEventListener('click', async () => {
     const form = document.getElementById('bill-process-form');
     if (!form.reportValidity()) return;
 
@@ -972,23 +971,22 @@ function openProcessModal(billId, currentRole) {
       addNotification('success', `LOG: Fatura de [${rule.name}] de Maio/2026 marcada como LIQUIDADA pelo ADM. Comprovante anexado.`);
     }
 
-    saveBill(bill);
+    await saveBill(bill);
     close();
-    const tabContainer = document.getElementById('tab-content-container');
-    renderMonthlyView(tabContainer, currentRole);
+    await renderMonthlyView(viewContainer, currentRole, activeObraId);
   });
 }
 
 // 4. Modal Visualização Apenas (Contas finalizadas)
-function openViewOnlyModal(billId) {
+async function openViewOnlyModal(billId) {
   const modal = document.getElementById('global-modal');
   const modalTitle = document.getElementById('modal-title');
   const modalBody = document.getElementById('modal-body');
   const modalFooter = document.getElementById('modal-footer');
   
-  const bills = getBillsForPeriod(activeMes, activeAno, activeObraId);
+  const bills = await getBillsForPeriod(activeMes, activeAno, null); // view global de leitura
   const bill = bills.find(b => b.id === billId);
-  const rules = getRules();
+  const rules = await getRules();
   const rule = rules.find(r => r.id === bill.ruleId);
   
   if (!bill || !rule) return;

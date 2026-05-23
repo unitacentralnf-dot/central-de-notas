@@ -4,6 +4,7 @@ import { renderDashboard } from './components/Dashboard.js';
 import { renderNFe } from './components/NFe.js';
 import { renderFixedBills } from './components/FixedBills.js';
 import { renderProtests } from './components/Protests.js';
+import { renderDDA } from './components/DDA.js';
 
 // Estado da Aplicação na Sessão
 let currentView = 'dashboard'; // 'dashboard', 'nfe', 'fixed-bills', 'protests'
@@ -52,6 +53,7 @@ const globalObraSelect = document.getElementById('globalObraSelect');
 // Navegação
 const navItems = {
   'dashboard': document.getElementById('nav-dashboard'),
+  'dda': document.getElementById('nav-dda'),
   'nfe': document.getElementById('nav-nfe'),
   'fixed-bills': document.getElementById('nav-fixed-bills'),
   'protests': document.getElementById('nav-protests')
@@ -60,16 +62,17 @@ const navItems = {
 // Mapeamento de Títulos de View
 const viewTitles = {
   'dashboard': 'Dashboard Operacional & Obras',
+  'dda': 'Triagem DDA (Câmara Interbancária)',
   'nfe': 'Notas Fiscais Eletrônicas (NFe / Sefaz)',
   'fixed-bills': 'Gestão de Contas Fixas Recorrentes',
   'protests': 'Regularidade Fiscal (Protestos CNPJ)'
 };
 
 // Inicialização Geral
-function init() {
+async function init() {
   // Carregar última obra ativa do cache
-  const obras = getObras();
-  if (obras.length > 0) {
+  const obras = await getObras();
+  if (obras && obras.length > 0) {
     const savedObraId = localStorage.getItem('active_obra_id');
     currentObraId = (savedObraId && obras.some(o => o.id === savedObraId)) ? savedObraId : obras[0].id;
   }
@@ -84,36 +87,36 @@ function init() {
   updateRoleUI();
   setupNavigation();
   setupRoleSelector();
-  setupObraSelector();
+  await setupObraSelector();
   
   // Renderizar view inicial
-  navigateTo(currentView);
+  await navigateTo(currentView);
 }
 
 // Configurar o seletor de obra global
-function setupObraSelector() {
+async function setupObraSelector() {
   if (!globalObraSelect) return;
-  const obras = getObras();
+  const obras = await getObras();
   
   globalObraSelect.innerHTML = obras.map(o => 
     `<option value="${o.id}" ${o.id === currentObraId ? 'selected' : ''}>${o.name} (${o.cnpj})</option>`
   ).join('');
   
-  globalObraSelect.addEventListener('change', (e) => {
+  globalObraSelect.addEventListener('change', async (e) => {
     currentObraId = e.target.value;
     localStorage.setItem('active_obra_id', currentObraId);
-    renderActiveView();
+    await renderActiveView();
   });
 }
 
 // Função para outros componentes alterarem a obra globalmente
-export function setGlobalObra(obraId) {
+export async function setGlobalObra(obraId) {
   currentObraId = obraId;
   localStorage.setItem('active_obra_id', currentObraId);
   if (globalObraSelect) {
     globalObraSelect.value = obraId;
   }
-  renderActiveView();
+  await renderActiveView();
 }
 
 // Configurar Eventos do Menu de Navegação
@@ -132,14 +135,14 @@ function setupNavigation() {
 // Configurar Eventos do Seletor de Perfis
 function setupRoleSelector() {
   if (profileSelect) {
-    profileSelect.addEventListener('change', (e) => {
+    profileSelect.addEventListener('change', async (e) => {
       currentRole = e.target.value;
       localStorage.setItem('active_role', currentRole);
       
       updateRoleUI();
       
       // Re-renderiza a tela ativa com as novas permissões do perfil
-      renderActiveView();
+      await renderActiveView();
     });
   }
 }
@@ -181,7 +184,7 @@ function updateRoleUI() {
 }
 
 // Realiza a transição de telas
-function navigateTo(view) {
+async function navigateTo(view) {
   currentView = view;
   
   // Atualiza classes do menu
@@ -202,23 +205,25 @@ function navigateTo(view) {
   }
 
   // Renderiza a view correspondente
-  renderActiveView();
+  await renderActiveView();
 }
 
 // Renderiza a tela ativa no container principal
-function renderActiveView() {
+async function renderActiveView() {
   if (!contentContainer) return;
 
-  contentContainer.innerHTML = ''; // Limpa conteúdo
+  contentContainer.innerHTML = '<div style="padding: 40px; text-align: center; color: hsl(var(--color-primary)); font-weight: 500;">Conectando ao Supabase...</div>'; // Loader
 
   if (currentView === 'dashboard') {
-    renderDashboard(contentContainer, currentRole, currentObraId);
+    await renderDashboard(contentContainer, currentRole, currentObraId);
+  } else if (currentView === 'dda') {
+    await renderDDA(contentContainer, currentRole, currentObraId);
   } else if (currentView === 'nfe') {
-    renderNFe(contentContainer, currentRole, currentObraId);
+    await renderNFe(contentContainer, currentRole, currentObraId);
   } else if (currentView === 'fixed-bills') {
-    renderFixedBills(contentContainer, currentRole, currentObraId);
+    await renderFixedBills(contentContainer, currentRole, currentObraId);
   } else if (currentView === 'protests') {
-    renderProtests(contentContainer, currentRole, currentObraId);
+    await renderProtests(contentContainer, currentRole, currentObraId);
   }
 }
 

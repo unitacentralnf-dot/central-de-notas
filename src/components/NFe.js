@@ -1,13 +1,13 @@
 import { getObras, getNFesByObra, syncSefaz, manifestNFe, launchNFe } from '../services/dataService.js';
 
-export function renderNFe(container, currentRole, activeObraId) {
-  const obras = getObras();
+export async function renderNFe(container, currentRole, activeObraId) {
+  const obras = await getObras();
   if (!activeObraId && obras.length > 0) {
     activeObraId = obras[0].id;
   }
 
   const selectedObra = obras.find(o => o.id === activeObraId);
-  const nfes = getNFesByObra(activeObraId);
+  const nfes = await getNFesByObra(activeObraId);
   const isAdm = currentRole === 'adm';
 
   const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -158,7 +158,7 @@ export function renderNFe(container, currentRole, activeObraId) {
 }
 
 // Simulação de Sincronização com Webservice Sefaz
-function triggerSefazSync(container, currentRole) {
+async function triggerSefazSync(container, currentRole) {
   const syncBox = document.getElementById('sync-animation-container');
   const btnSync = document.getElementById('btn-sync-sefaz');
   const statusText = document.getElementById('sync-status-text');
@@ -169,30 +169,26 @@ function triggerSefazSync(container, currentRole) {
   syncBox.style.display = 'block';
 
   // Passo 1: Autenticação
-  setTimeout(() => {
-    statusText.textContent = 'CONSULTANDO CERTIFICADO DIGITAL DA UNITA E BUSCANDO NFES NA SEFAZ...';
-    
-    // Passo 2: Importação
-    setTimeout(() => {
-      statusText.textContent = 'BAIXANDO ARQUIVOS XML E IMPORTANDO ITENS DE NOTA...';
-      
-      // Passo 3: Conclusão
-      setTimeout(() => {
-        const added = syncSefaz(activeObraId);
-        
-        syncBox.style.display = 'none';
-        btnSync.removeAttribute('disabled');
+  statusText.textContent = 'CONSULTANDO CERTIFICADO DIGITAL DA UNITA E BUSCANDO NFES NA SEFAZ...';
+  await new Promise(r => setTimeout(r, 1000));
+  
+  // Passo 2: Importação
+  statusText.textContent = 'BAIXANDO ARQUIVOS XML E IMPORTANDO ITENS DE NOTA...';
+  await new Promise(r => setTimeout(r, 1000));
+  
+  // Passo 3: Conclusão
+  const added = await syncSefaz(activeObraId);
+  
+  syncBox.style.display = 'none';
+  btnSync.removeAttribute('disabled');
 
-        if (added > 0) {
-          alert('Sincronização Concluída! 1 nova nota fiscal eletrônica foi identificada e importada para a obra.');
-        } else {
-          alert('Sincronização Concluída. Nenhuma nova nota fiscal foi emitida contra esta obra nas últimas horas.');
-        }
+  if (added && added.length > 0) {
+    alert('Sincronização Concluída! Novas notas fiscais eletrônicas identificadas e importadas.');
+  } else {
+    alert('Sincronização Concluída. Nenhuma nova nota fiscal foi emitida.');
+  }
 
-        renderNFe(container, currentRole, activeObraId);
-      }, 1000);
-    }, 1000);
-  }, 1000);
+  await renderNFe(container, currentRole, activeObraId);
 }
 
 
@@ -307,12 +303,12 @@ function openNfeManifestModal(nfeId, viewContainer, currentRole, nfes, activeObr
   document.getElementById('btn-close-modal').addEventListener('click', close);
   document.getElementById('close-modal-btn').addEventListener('click', close);
 
-  document.getElementById('btn-submit-manifest').addEventListener('click', () => {
+  document.getElementById('btn-submit-manifest').addEventListener('click', async () => {
     const status = document.getElementById('manifest-option-select').value;
-    const success = manifestNFe(nfeId, status);
+    const success = await manifestNFe(nfeId, status);
     if (success) {
       close();
-      renderNFe(viewContainer, currentRole, activeObraId);
+      await renderNFe(viewContainer, currentRole, activeObraId);
     }
   });
 }
@@ -365,12 +361,12 @@ function openNfeLaunchModal(nfeId, viewContainer, currentRole, nfes, activeObraI
   document.getElementById('btn-close-modal').addEventListener('click', close);
   document.getElementById('close-modal-btn').addEventListener('click', close);
 
-  document.getElementById('btn-submit-launch-nfe').addEventListener('click', () => {
+  document.getElementById('btn-submit-launch-nfe').addEventListener('click', async () => {
     const costCenter = document.getElementById('nfe-cost-select').value;
-    const success = launchNFe(nfeId, costCenter);
+    const success = await launchNFe(nfeId, costCenter);
     if (success) {
       close();
-      renderNFe(viewContainer, currentRole, activeObraId);
+      await renderNFe(viewContainer, currentRole, activeObraId);
     }
   });
 }

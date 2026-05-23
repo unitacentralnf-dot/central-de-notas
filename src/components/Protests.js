@@ -1,10 +1,11 @@
-import { getObras, verifyProtests, resolveProtest, addNotification } from '../services/dataService.js';
+import { getObras, saveObra, addNotification } from '../services/dataService.js';
 
 let activeObraId = '';
-let scanResult = null; // Guarda o resultado da última varredura na sessão
+let scanResult = null; 
 
-export function renderProtests(container, currentRole) {
-  const obras = getObras();
+export async function renderProtests(container, currentRole, initialObraId = '') {
+  if (initialObraId) activeObraId = initialObraId;
+  const obras = await getObras();
   if (!activeObraId && obras.length > 0) {
     activeObraId = obras[0].id;
   }
@@ -82,7 +83,7 @@ export function renderProtests(container, currentRole) {
   const selectObra = document.getElementById('protest-obra-select');
   selectObra.addEventListener('change', (e) => {
     activeObraId = e.target.value;
-    renderProtests(container, currentRole);
+    renderProtests(container, currentRole, activeObraId);
   });
 
   // Botão de Iniciar Varredura
@@ -95,12 +96,11 @@ export function renderProtests(container, currentRole) {
 }
 
 // Simulação Visual da Varredura
-function runScanSimulation(container, currentRole) {
+async function runScanSimulation(container, currentRole) {
   const scanArea = document.getElementById('scan-trigger-area');
   const resultsPanel = document.getElementById('protest-results-panel');
   if (!scanArea || !resultsPanel) return;
 
-  // 1. Mostrar Spinner/Animação de Scanner no painel de controle
   scanArea.innerHTML = `
     <div class="scan-box" style="height: 180px;">
       <div class="scan-line" style="background: linear-gradient(to right, transparent, hsl(var(--color-info)), transparent); box-shadow: 0 0 12px hsl(var(--color-info));"></div>
@@ -108,74 +108,41 @@ function runScanSimulation(container, currentRole) {
     </div>
   `;
 
-  // 2. Desabilitar outros botões
   document.getElementById('protest-obra-select').setAttribute('disabled', 'true');
 
-  // 3. Simular requisição de 2 segundos
-  setTimeout(() => {
-    const res = verifyProtests(activeObraId);
-    
-    // Atualizar visualização do painel de resultados
-    const obras = getObras();
-    const selectedObra = obras.find(o => o.id === activeObraId);
-    
-    // Atualiza hora da última consulta na tela
-    const checkTimeContainer = document.getElementById('protest-last-check-time');
-    if (checkTimeContainer && selectedObra) {
-      checkTimeContainer.innerHTML = `Última varredura realizada em: <strong>${new Date(selectedObra.lastProtestCheck).toLocaleString('pt-BR')}</strong>`;
-    }
-
-    // Atualiza coluna da direita
-    const isAdm = currentRole === 'adm';
-    const detailsHtml = res.status === 'dirty' ? getProtestDetailsHtml(selectedObra.cnpj) : '';
-    resultsPanel.innerHTML = renderStatusPanelHtml(selectedObra, detailsHtml, isAdm);
-
-    // Restaurar painel de gatilho
-    scanArea.innerHTML = `
-      <div style="background-color: rgba(255, 255, 255, 0.02); border: 1px dashed var(--border-light); padding: 32px; border-radius: var(--radius-lg); text-align: center;">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" style="width: 64px; height: 64px; color: hsl(var(--text-muted)); margin-bottom: 16px; margin-inline: auto;">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
-        </svg>
-        <h3 style="color: white; font-size: 1.1rem; margin-bottom: 8px;">Varredura Automática Concluída</h3>
-        <p style="font-size: 0.85rem; color: hsl(var(--text-muted)); max-width: 400px; margin-inline: auto; margin-bottom: 24px;">
-          Cartórios consultados com sucesso. Veja o resultado na coluna de status fiscal ao lado.
-        </p>
-        <button class="btn btn-secondary" id="btn-start-scan">
-          Repetir Varredura
-        </button>
-      </div>
-    `;
-
-    // Reabilitar select
-    document.getElementById('protest-obra-select').removeAttribute('disabled');
-
-    // Recarregar os eventos dos botões e do formulário de upload
-    document.getElementById('btn-start-scan').addEventListener('click', () => {
-      runScanSimulation(container, currentRole);
-    });
-
-    bindDirtyFormEvents(container, currentRole);
-
-  }, 2000);
+  // Simular requisição de 2 segundos
+  await new Promise(r => setTimeout(r, 2000));
+  
+  const obras = await getObras();
+  const selectedObra = obras.find(o => o.id === activeObraId);
+  
+  if (selectedObra) {
+    selectedObra.lastProtestCheck = new Date().toISOString();
+    selectedObra.protestStatus = selectedObra.name === 'Residencial Bella Vista' ? 'dirty' : 'clean';
+    await saveObra(selectedObra); // Salva o status simulado no Supabase para o teste
+  }
+  
+  await renderProtests(container, currentRole, activeObraId);
 }
 
 // Vincula eventos do formulário de resolução de protesto (Upload de anuência)
 function bindDirtyFormEvents(container, currentRole) {
   const btnResolve = document.getElementById('btn-submit-resolution');
   if (btnResolve) {
-    btnResolve.addEventListener('click', () => {
+    btnResolve.addEventListener('click', async () => {
       const fileInput = document.getElementById('protest-voucher-file');
       if (!fileInput.value) {
         alert('Por favor, selecione um arquivo de comprovante/anuência.');
         return;
       }
       
-      const fileName = fileInput.files[0] ? fileInput.files[0].name : 'anuencia_registrada.pdf';
-      
-      const success = resolveProtest(activeObraId, fileName);
-      if (success) {
+      const obras = await getObras();
+      const selectedObra = obras.find(o => o.id === activeObraId);
+      if (selectedObra) {
+        selectedObra.protestStatus = 'clean';
+        await saveObra(selectedObra);
         alert('Comprovante enviado com sucesso! O status do CNPJ foi atualizado para REGULAR.');
-        renderProtests(container, currentRole);
+        await renderProtests(container, currentRole, activeObraId);
       }
     });
   }
