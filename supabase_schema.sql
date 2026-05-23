@@ -6,8 +6,9 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     nome VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
     senha VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL, -- adm, engenheiro, financeiro, ggo
+    role VARCHAR(50) NOT NULL, -- adm, engenheiro, financeiro, ggo, master
     avatar_iniciais VARCHAR(10) NOT NULL,
+    obra_id UUID REFERENCES public.obras(id) ON DELETE SET NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

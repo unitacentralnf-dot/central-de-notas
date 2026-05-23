@@ -24,12 +24,15 @@ export async function renderNFe(container, currentRole, activeObraId) {
           Obra Integrada: <strong style="color: white;">${selectedObra ? selectedObra.name : 'Nenhuma'}</strong> <span style="font-size: 0.8rem; color: hsl(var(--text-dim)); font-family: monospace; margin-left: 6px;">(CNPJ: ${selectedObra ? selectedObra.cnpj : ''})</span>
         </div>
 
-        <button class="btn btn-primary" id="btn-sync-sefaz">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
-          </svg>
-          Consultar Novas NFs (Sefaz)
-        </button>
+        <div style="display: flex; gap: 12px; align-items: center;">
+          <input type="text" id="nfe-search-input" class="filter-select" placeholder="Buscar por Fornecedor ou NF..." style="width: 250px; font-size: 0.85rem; padding: 8px 12px;" aria-label="Buscar Notas Fiscais" />
+          <button class="btn btn-primary" id="btn-sync-sefaz">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width: 16px; height: 16px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg>
+            Consultar Novas NFs (Sefaz)
+          </button>
+        </div>
       </div>
 
       <!-- Painel de Métricas da NFe -->
@@ -160,10 +163,30 @@ export async function renderNFe(container, currentRole, activeObraId) {
 
   // Vinculação de Eventos
   // 1. Sincronização Sefaz
+  const btnSyncSefaz = document.getElementById('btn-sync-sefaz');
+  if (btnSyncSefaz) {
+    btnSyncSefaz.addEventListener('click', () => {
+      triggerSefazSync(container, currentRole);
+    });
+  }
 
-  document.getElementById('btn-sync-sefaz').addEventListener('click', () => {
-    triggerSefazSync(container, currentRole);
-  });
+  // 2. Busca local em tempo real
+  const searchInput = document.getElementById('nfe-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const rows = container.querySelectorAll('table.table-premium tbody tr');
+      rows.forEach(row => {
+        if (row.cells.length === 1 && row.textContent.includes('Nenhuma nota')) return;
+        const text = row.textContent.toLowerCase();
+        if (text.includes(q)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    });
+  }
 
   // 3. Botão Detalhes dos Itens
   container.querySelectorAll('.btn-nfe-detail').forEach(btn => {

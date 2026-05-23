@@ -1571,3 +1571,62 @@ table.table-premium tbody tr:last-child td {
     max-height: 95vh;
   }
 }
+
+/* Transições Premium de View (Fim da Piscada) */
+.view-enter {
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.view-exit {
+  opacity: 0 !important;
+  transform: translateY(8px) !important;
+  transition: opacity 0.12s ease-in, transform 0.12s ease-in !important;
+}
+
+/* Shimmer Skeletons */
+.shimmer-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+.shimmer-card {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.02) 25%, rgba(255, 255, 255, 0.05) 37%, rgba(255, 255, 255, 0.02) 63%);
+  background-size: 400% 100%;
+  animation: shimmer-animation 1.4s ease infinite;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+
+.shimmer-card.header-shimmer {
+  height: 48px;
+  width: 320px;
+  border-radius: var(--radius-sm);
+}
+
+.shimmer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.shimmer-grid .shimmer-card {
+  height: 160px;
+}
+
+.shimmer-table {
+  height: 320px;
+  width: 100%;
+}
+
+@keyframes shimmer-animation {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}

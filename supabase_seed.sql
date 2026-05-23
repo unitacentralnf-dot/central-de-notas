@@ -94,12 +94,12 @@ INSERT INTO public.protestos (obra_id, cartorio, valor, data_protesto, status, c
 ('c288e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a2', 'Cartório de Registro de Protestos de Campinas', 8900.00, '2026-05-12', 'Ativo', 'Cimento Cauê S.A');
 
 -- 8. Inserindo Usuários do Sistema
-INSERT INTO public.usuarios (id, nome, email, senha, role, avatar_iniciais) VALUES
-('a111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1', 'Carlos Silva', 'master@unita.com.br', 'masterunita2026', 'adm', 'CS'),
-('a222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a2', 'Eng. Roberto Dias', 'roberto@unita.com.br', 'robertounita2026', 'engenheiro', 'RD'),
-('a333e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a3', 'Mariana Lins', 'mariana@unita.com.br', 'marianaunita2026', 'financeiro', 'ML'),
-('a444e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a4', 'Arthur Albuquerque', 'arthur@unita.com.br', 'arthurunita2026', 'ggo', 'AA'),
-('b555e8d3-5b8d-4e29-a1b7-a3f8c8d8b955', 'Sistema Master', 'master@unitasistema.com.br', 'unitamaster2026', 'master', 'MS')
+INSERT INTO public.usuarios (id, nome, email, senha, role, avatar_iniciais, obra_id) VALUES
+('a111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1', 'Carlos Silva', 'master@unita.com.br', 'masterunita2026', 'adm', 'CS', 'b199e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1'),
+('a222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a2', 'Eng. Roberto Dias', 'roberto@unita.com.br', 'robertounita2026', 'engenheiro', 'RD', 'b199e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1'),
+('a333e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a3', 'Mariana Lins', 'mariana@unita.com.br', 'marianaunita2026', 'financeiro', 'ML', 'c288e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a2'),
+('a444e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a4', 'Arthur Albuquerque', 'arthur@unita.com.br', 'arthurunita2026', 'ggo', 'AA', NULL),
+('b555e8d3-5b8d-4e29-a1b7-a3f8c8d8b955', 'Sistema Master', 'master@unitasistema.com.br', 'unitamaster2026', 'master', 'MS', NULL)
 ON CONFLICT (id) DO NOTHING;
 
 -- 9. Inserindo Solicitações de Acesso Pendentes

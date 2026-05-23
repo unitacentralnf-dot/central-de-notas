@@ -335,6 +335,7 @@ export async function loginUser(email, senha) {
     email: data.email,
     role: data.role,
     initials: data.avatar_iniciais,
+    obraId: data.obra_id,
     welcome: `Olá, ${data.nome.split(' ')[0]}! Bem-vindo de volta.`
   };
 }
@@ -390,7 +391,7 @@ export async function updateAccessRequest(id, updates) {
 export async function getUsuarios() {
   const { data, error } = await supabase
     .from('usuarios')
-    .select('*')
+    .select('*, obras(nome)')
     .order('nome', { ascending: true });
   if (error) {
     console.error('Erro ao buscar usuários:', error);
@@ -402,11 +403,13 @@ export async function getUsuarios() {
     email: u.email,
     role: u.role,
     initials: u.avatar_iniciais,
+    obraId: u.obra_id,
+    obraNome: u.obras ? u.obras.nome : 'Todas as Obras (Master/Diretor)',
     createdAt: u.created_at,
   }));
 }
 
-export async function createUsuario({ nome, email, senha, role }) {
+export async function createUsuario({ nome, email, senha, role, obraId }) {
   const iniciais = nome.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase();
   const { data, error } = await supabase.from('usuarios').insert([{
     nome,
@@ -414,13 +417,19 @@ export async function createUsuario({ nome, email, senha, role }) {
     senha,
     role,
     avatar_iniciais: iniciais,
+    obra_id: obraId || null
   }]).select();
   if (error) throw error;
   return data[0];
 }
 
 export async function updateUsuario(id, updates) {
-  const { error } = await supabase.from('usuarios').update(updates).eq('id', id);
+  const dbUpdates = { ...updates };
+  if (updates.hasOwnProperty('obraId')) {
+    dbUpdates.obra_id = updates.obraId;
+    delete dbUpdates.obraId;
+  }
+  const { error } = await supabase.from('usuarios').update(dbUpdates).eq('id', id);
   if (error) throw error;
   return true;
 }

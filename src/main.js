@@ -62,7 +62,14 @@ async function init() {
 
 async function startApp() {
   const obras = await getObras();
-  if (obras && obras.length > 0) {
+  
+  // Lógica de isolamento multi-tenant:
+  const isRestrictedUser = currentUser && currentUser.obraId && currentRole !== 'master' && currentRole !== 'ggo';
+  
+  if (isRestrictedUser) {
+    // Trava estritamente na obra vinculada do usuário operacional
+    currentObraId = currentUser.obraId;
+  } else if (obras && obras.length > 0) {
     const savedObraId = localStorage.getItem('active_obra_id');
     currentObraId = (savedObraId && obras.some(o => o.id === savedObraId)) ? savedObraId : obras[0].id;
   }
@@ -158,6 +165,13 @@ function setupLogoutEvent() {
     btnLogout.addEventListener('click', () => {
       sessionStorage.removeItem('current_user');
       currentUser = null;
+      
+      // Ocultar menus administrativos do master imediatamente no logout
+      const navMaster = document.getElementById('nav-master');
+      const navMasterCat = document.getElementById('nav-master-category');
+      if (navMaster) navMaster.style.display = 'none';
+      if (navMasterCat) navMasterCat.style.display = 'none';
+
       const emailInput = document.getElementById('login-email');
       const passInput = document.getElementById('login-password');
       if (emailInput) emailInput.value = '';
@@ -174,15 +188,37 @@ async function setupObraSelector() {
   if (!globalObraSelect) return;
   const obras = await getObras();
   
-  globalObraSelect.innerHTML = obras.map(o =>
+  const isRestrictedUser = currentUser && currentUser.obraId && currentRole !== 'master' && currentRole !== 'ggo';
+  
+  let filteredObras = obras;
+  if (isRestrictedUser) {
+    filteredObras = obras.filter(o => o.id === currentUser.obraId);
+    globalObraSelect.disabled = true;
+    globalObraSelect.style.opacity = '0.7';
+    globalObraSelect.style.cursor = 'not-allowed';
+  } else {
+    globalObraSelect.disabled = false;
+    globalObraSelect.style.opacity = '1';
+    globalObraSelect.style.cursor = 'pointer';
+  }
+  
+  globalObraSelect.innerHTML = filteredObras.map(o =>
     `<option value="${o.id}" ${o.id === currentObraId ? 'selected' : ''}>${o.name} (${o.cnpj})</option>`
   ).join('');
   
-  globalObraSelect.addEventListener('change', async (e) => {
+  const handleSelectChange = async (e) => {
+    if (isRestrictedUser) {
+      e.preventDefault();
+      return;
+    }
     currentObraId = e.target.value;
     localStorage.setItem('active_obra_id', currentObraId);
     await renderActiveView();
-  });
+  };
+  
+  globalObraSelect.removeEventListener('change', globalObraSelect._changeHandler);
+  globalObraSelect._changeHandler = handleSelectChange;
+  globalObraSelect.addEventListener('change', handleSelectChange);
 }
 
 export async function setGlobalObra(obraId) {
@@ -214,12 +250,16 @@ function updateRoleUI() {
 
   roleBadge.className = 'profile-badge';
 
+  // Reset preventivo de visibilidade de menu
+  const navMaster = document.getElementById('nav-master');
+  const navMasterCat = document.getElementById('nav-master-category');
+  if (navMaster) navMaster.style.display = 'none';
+  if (navMasterCat) navMasterCat.style.display = 'none';
+
   if (currentRole === 'master') {
     roleBadge.textContent = 'Master Admin';
     roleBadge.classList.add('master');
     // Revelar menu e categoria admin no sidebar
-    const navMaster = document.getElementById('nav-master');
-    const navMasterCat = document.getElementById('nav-master-category');
     if (navMaster) navMaster.style.display = 'flex';
     if (navMasterCat) navMasterCat.style.display = 'block';
   } else if (currentRole === 'adm') {
@@ -279,14 +319,41 @@ async function navigateTo(view) {
 async function renderActiveView() {
   if (!contentContainer) return;
 
-  // 1. Fade out
-  contentContainer.style.opacity = '0';
-  contentContainer.style.transform = 'translateY(6px)';
-  contentContainer.style.transition = 'opacity 0.15s ease, transform 0.15s ease';
+  // 1. Fade out: adiciona classe view-exit e remove view-enter
+  contentContainer.classList.add('view-exit');
+  contentContainer.classList.remove('view-enter');
 
-  await new Promise(r => setTimeout(r, 150));
+  // Aguarda a transição de fade-out (120ms)
+  await new Promise(r => setTimeout(r, 120));
 
-  // 2. Renderiza o conteúdo
+  // 2. Injeta o Skeleton Shimmer correspondente à view
+  let shimmerHtml = `
+    <div class="shimmer-container">
+      <div class="shimmer-card header-shimmer"></div>
+      <div class="shimmer-grid">
+        <div class="shimmer-card"></div>
+        <div class="shimmer-card"></div>
+        <div class="shimmer-card"></div>
+      </div>
+    </div>
+  `;
+  
+  if (currentView === 'nfe' || currentView === 'dda' || currentView === 'master') {
+    shimmerHtml = `
+      <div class="shimmer-container">
+        <div class="shimmer-card header-shimmer" style="width: 250px;"></div>
+        <div class="shimmer-card shimmer-table"></div>
+      </div>
+    `;
+  }
+  
+  contentContainer.innerHTML = shimmerHtml;
+  
+  // Revela o shimmer com fade-in suave
+  contentContainer.classList.remove('view-exit');
+  contentContainer.classList.add('view-enter');
+
+  // 3. Renderiza o conteúdo real
   if (currentView === 'dashboard') {
     await renderDashboard(contentContainer, currentRole, currentObraId);
   } else if (currentView === 'dda') {
@@ -301,9 +368,9 @@ async function renderActiveView() {
     await renderMaster(contentContainer, currentUser);
   }
 
-  // 3. Fade in
-  contentContainer.style.opacity = '1';
-  contentContainer.style.transform = 'translateY(0)';
+  // 4. Revela a view carregada
+  contentContainer.classList.remove('view-exit');
+  contentContainer.classList.add('view-enter');
 }
 
 document.addEventListener('DOMContentLoaded', init);

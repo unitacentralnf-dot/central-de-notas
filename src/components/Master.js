@@ -129,6 +129,13 @@ async function renderRequestsTab(tabContent) {
                     <label class="form-label" style="font-size: 0.75rem; margin-bottom: 4px;">Senha provisória</label>
                     <input type="text" class="form-control req-senha-input" placeholder="Ex: Unita@2026" style="font-size: 0.82rem; padding: 6px 10px;" value="Unita@2026" />
                   </div>
+                  <div>
+                    <label class="form-label" style="font-size: 0.75rem; margin-bottom: 4px;">Vincular a Obra</label>
+                    <select class="form-control req-obra-select" style="font-size: 0.82rem; padding: 6px 10px;">
+                      <option value="">Todas (Master/GGO)</option>
+                      ${obras.map(o => `<option value="${o.id}">${o.name}</option>`).join('')}
+                    </select>
+                  </div>
                   <div style="display: flex; gap: 8px;">
                     <button class="btn btn-primary btn-sm btn-approve-req" data-id="${req.id}" data-nome="${req.nome}" data-email="${req.email}" style="flex: 1; justify-content: center; font-size: 0.8rem;">
                       ✅ Aprovar
@@ -191,12 +198,13 @@ async function renderRequestsTab(tabContent) {
       const email = e.currentTarget.dataset.email;
       const role = card.querySelector('.req-role-select').value;
       const senha = card.querySelector('.req-senha-input').value;
+      const obraId = card.querySelector('.req-obra-select').value || null;
 
       btn.disabled = true;
       btn.textContent = 'Criando...';
 
       try {
-        await createUsuario({ nome, email, senha, role });
+        await createUsuario({ nome, email, senha, role, obraId });
         await updateAccessRequest(id, { status: 'aprovado' });
         await renderRequestsTab(tabContent);
       } catch (err) {
@@ -217,10 +225,10 @@ async function renderRequestsTab(tabContent) {
   });
 }
 
-// ─── ABA USUÁRIOS ──────────────────────────────────────────────
 async function renderUsersTab(tabContent) {
   const usuarios = await getUsuarios();
-
+  const obras = await getObras();
+ 
   tabContent.innerHTML = `
     <div class="section-panel">
       <div class="panel-header">
@@ -229,7 +237,7 @@ async function renderUsersTab(tabContent) {
           + Novo Usuário
         </button>
       </div>
-
+ 
       <!-- Formulário de novo usuário (oculto) -->
       <div id="new-user-form-panel" style="display: none; background: hsl(var(--bg-input)); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px;">
         <h3 style="font-size: 0.9rem; font-weight: 700; color: white; margin-bottom: 16px;">➕ Adicionar Novo Usuário</h3>
@@ -255,6 +263,13 @@ async function renderUsersTab(tabContent) {
               <option value="ggo">GGO / Diretor</option>
             </select>
           </div>
+          <div class="form-group" style="margin-bottom: 0; grid-column: 1 / -1;">
+            <label class="form-label">Vincular a Obra</label>
+            <select id="nu-obra-id" class="form-control">
+              <option value="">Todas as Obras (Master/GGO)</option>
+              ${obras.map(o => `<option value="${o.id}">${o.name} (${o.cnpj})</option>`).join('')}
+            </select>
+          </div>
         </div>
         <div id="nu-error" style="display:none; color: hsl(var(--color-danger)); font-size: 0.8rem; margin-top: 10px;"></div>
         <div style="margin-top: 16px; display: flex; gap: 8px;">
@@ -270,6 +285,7 @@ async function renderUsersTab(tabContent) {
               <th>Usuário</th>
               <th>E-mail</th>
               <th>Perfil</th>
+              <th>Obra Vinculada</th>
               <th>Ações</th>
             </tr>
           </thead>
@@ -287,6 +303,7 @@ async function renderUsersTab(tabContent) {
                   </td>
                   <td style="font-size: 0.82rem; color: hsl(var(--text-muted));">${u.email}</td>
                   <td><span class="badge ${badgeCls}"><span class="badge-dot"></span>${roleLabel}</span></td>
+                  <td style="font-size: 0.82rem; color: ${u.obraNome.startsWith('Todas') ? 'hsl(var(--text-dim))' : 'white'}; font-weight: ${u.obraNome.startsWith('Todas') ? 'normal' : '600'};">${u.obraNome}</td>
                   <td>
                     <button class="btn btn-danger btn-sm btn-delete-user" data-id="${u.id}" data-nome="${u.nome}" style="font-size: 0.75rem; padding: 4px 10px;">
                       Remover
@@ -315,6 +332,7 @@ async function renderUsersTab(tabContent) {
     const email = document.getElementById('nu-email').value.trim();
     const senha = document.getElementById('nu-senha').value.trim();
     const role = document.getElementById('nu-role').value;
+    const obraId = document.getElementById('nu-obra-id').value || null;
     const errorEl = document.getElementById('nu-error');
 
     if (!nome || !email || !senha) {
@@ -325,7 +343,7 @@ async function renderUsersTab(tabContent) {
     errorEl.style.display = 'none';
 
     try {
-      await createUsuario({ nome, email, senha, role });
+      await createUsuario({ nome, email, senha, role, obraId });
       await renderUsersTab(tabContent);
     } catch (err) {
       errorEl.textContent = 'Erro: ' + (err.message || 'E-mail pode já estar cadastrado.');

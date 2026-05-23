@@ -82,6 +82,11 @@ async function renderMonthlyView(container, currentRole, activeObraId) {
   const colRecebida = bills.filter(b => b.status === 'recebida');
   const colLancadaPaga = bills.filter(b => b.status === 'lancada' || b.status === 'paga');
 
+  // Cálculos de métricas
+  const totalOrcado = bills.reduce((acc, curr) => acc + curr.valorEstimado, 0);
+  const totalReal = bills.reduce((acc, curr) => acc + (curr.valorReal || 0), 0);
+  const pendenciasCount = colNaoChegou.length;
+
   const html = `
     <!-- Barra de Filtros -->
     <div class="filter-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -98,6 +103,35 @@ async function renderMonthlyView(container, currentRole, activeObraId) {
       </div>
     </div>
 
+    <!-- Painel de Métricas de Contas Fixas -->
+    <section class="summary-grid" style="margin-bottom: 24px;" aria-label="Métricas de Contas Fixas">
+      <div class="card-premium primary" style="padding: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase;">Total Orçado</span>
+          <span style="font-size: 1.25rem;">📋</span>
+        </div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-top: 8px;">${fmt(totalOrcado)}</div>
+        <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); margin-top: 4px;">Previsão de custos fixos</div>
+      </div>
+
+      <div class="card-premium success" style="padding: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase;">Realizado / Lançado</span>
+          <span style="font-size: 1.25rem;">💰</span>
+        </div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-top: 8px;">${fmt(totalReal)}</div>
+        <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); margin-top: 4px;">Faturas já identificadas/pagas</div>
+      </div>
+
+      <div class="card-premium ${pendenciasCount > 0 ? 'danger' : 'success'}" style="padding: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase;">Faturas Atrasadas / Pendentes</span>
+          <span style="font-size: 1.25rem;">⚠️</span>
+        </div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-top: 8px;">${pendenciasCount} Contas</div>
+        <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); margin-top: 4px;">Aguardando envio pelo canteiro</div>
+      </div>
+    </section>
 
     <!-- Kanban Grid -->
     <div class="kanban-grid" aria-label="Quadro de acompanhamento das contas">

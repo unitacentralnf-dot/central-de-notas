@@ -102,16 +102,13 @@ export async function renderProtests(container, currentRole, initialObraId = '')
   container.innerHTML = html;
 
   // Vinculação de Eventos
-  const selectObra = document.getElementById('protest-obra-select');
-  selectObra.addEventListener('change', (e) => {
-    activeObraId = e.target.value;
-    renderProtests(container, currentRole, activeObraId);
-  });
-
   // Botão de Iniciar Varredura
-  document.getElementById('btn-start-scan').addEventListener('click', () => {
-    runScanSimulation(container, currentRole);
-  });
+  const btnStartScan = document.getElementById('btn-start-scan');
+  if (btnStartScan) {
+    btnStartScan.addEventListener('click', () => {
+      runScanSimulation(container, currentRole);
+    });
+  }
 
   // Seletor de comprovante e envio (caso renderize o dirty)
   bindDirtyFormEvents(container, currentRole);
@@ -130,7 +127,10 @@ async function runScanSimulation(container, currentRole) {
     </div>
   `;
 
-  document.getElementById('protest-obra-select').setAttribute('disabled', 'true');
+  const globalObraSelect = document.getElementById('globalObraSelect');
+  if (globalObraSelect) {
+    globalObraSelect.setAttribute('disabled', 'true');
+  }
 
   // Simular requisição de 2 segundos
   await new Promise(r => setTimeout(r, 2000));
@@ -142,6 +142,10 @@ async function runScanSimulation(container, currentRole) {
     selectedObra.lastProtestCheck = new Date().toISOString();
     selectedObra.protestStatus = selectedObra.name === 'Residencial Bella Vista' ? 'dirty' : 'clean';
     await saveObra(selectedObra); // Salva o status simulado no Supabase para o teste
+  }
+  
+  if (globalObraSelect) {
+    globalObraSelect.removeAttribute('disabled');
   }
   
   await renderProtests(container, currentRole, activeObraId);
