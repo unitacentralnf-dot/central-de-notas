@@ -1,5 +1,7 @@
 import { supabase, supabaseAdmin } from '../supabaseClient.js';
 
+const db = () => supabaseAdmin || supabase;
+
 export async function mockGetObras() {
   const { data, error } = await supabase.from('obras').select('*').order('created_at', { ascending: false });
   if (error) {
@@ -19,7 +21,7 @@ export async function mockGetObras() {
 }
 
 export async function mockSaveObra(obra) {
-  const { data, error } = await supabase.from('obras').upsert({
+  const { data, error } = await db().from('obras').upsert({
     id: obra.id || undefined,
     nome: obra.name,
     cnpj: obra.cnpj,
@@ -37,7 +39,7 @@ export async function mockSaveObra(obra) {
 }
 
 export async function mockDeleteObra(id) {
-  const { error } = await supabase.from('obras').delete().eq('id', id);
+  const { error } = await db().from('obras').delete().eq('id', id);
   if (error) throw error;
   return true;
 }
@@ -62,7 +64,7 @@ export async function mockGetRules() {
 }
 
 export async function mockSaveRule(rule) {
-  const { data, error } = await supabase.from('contas_fixas').upsert({
+  const { data, error } = await db().from('contas_fixas').upsert({
     id: rule.id || undefined,
     obra_id: rule.obraId,
     nome: rule.name,
@@ -83,7 +85,7 @@ export async function mockSaveRule(rule) {
 }
 
 export async function mockDeleteRule(id) {
-  const { error } = await supabase.from('contas_fixas').delete().eq('id', id);
+  const { error } = await db().from('contas_fixas').delete().eq('id', id);
   if (error) throw error;
   return true;
 }
@@ -114,7 +116,7 @@ export async function mockGetBills() {
 }
 
 export async function mockSaveBill(bill) {
-  const { data, error } = await supabase.from('faturas').upsert({
+  const { data, error } = await db().from('faturas').upsert({
     id: bill.id || undefined,
     conta_fixa_id: bill.ruleId,
     mes_referencia: `${bill.ano}-${bill.mes}`,
@@ -158,7 +160,7 @@ export async function mockManifestNFe(nfeId, type) {
   if (type === 'confirmacao') status_manifesto = 'Confirmada';
   if (type === 'desconhecimento') status_manifesto = 'Desconhecida';
   if (type === 'nao_realizada') status_manifesto = 'Nao Realizada';
-  const { error } = await supabase.from('notas_fiscais').update({ status_manifesto }).eq('id', nfeId);
+  const { error } = await db().from('notas_fiscais').update({ status_manifesto }).eq('id', nfeId);
   return !error;
 }
 
@@ -225,7 +227,7 @@ export async function mockGetProtestsByObra(obraId) {
 
 export async function mockResolveProtestsForObra(obraId) {
   if (!obraId) return false;
-  const { error } = await supabase
+  const { error } = await db()
     .from('protestos')
     .update({ status: 'Regularizado' })
     .eq('obra_id', obraId)
@@ -284,7 +286,7 @@ export async function mockLoginUser(email, senha) {
 
 export async function mockSubmitAccessRequest({ nome, email, obra, mensagem }) {
   try {
-    const { error } = await supabase.from('solicitacoes_acesso').insert([{
+    const { error } = await db().from('solicitacoes_acesso').insert([{
       nome, email,
       obra_solicitada: obra,
       mensagem: mensagem || '',
@@ -316,7 +318,7 @@ export async function mockGetAccessRequests() {
 }
 
 export async function mockUpdateAccessRequest(id, updates) {
-  const { error } = await supabase
+  const { error } = await db()
     .from('solicitacoes_acesso')
     .update(updates)
     .eq('id', id);
@@ -373,22 +375,14 @@ export async function mockCreateUsuario({ nome, email, senha, role, obraId }) {
 
 export async function mockUpdateUsuario(id, updates) {
   const dbUpdates = { ...updates };
-  if (updates.hasOwnProperty('obraId')) {
-    dbUpdates.obra_id = updates.obraId;
-    delete dbUpdates.obraId;
-  }
-  const { error } = await supabase.from('usuarios').update(dbUpdates).eq('id', id);
+  delete dbUpdates.obraId;
+  const { error } = await db().from('usuarios').update(dbUpdates).eq('id', id);
   if (error) throw error;
   return true;
 }
 
 export async function mockDeleteUsuario(id) {
-  // Busca o auth_user_id antes de deletar
-  const { data: user } = await supabase.from('usuarios').select('auth_user_id').eq('id', id).single();
-  if (user?.auth_user_id && supabaseAdmin) {
-    await supabaseAdmin.auth.admin.deleteUser(user.auth_user_id).catch(() => {});
-  }
-  const { error } = await supabase.from('usuarios').delete().eq('id', id);
+  const { error } = await db().from('usuarios').delete().eq('id', id);
   if (error) throw error;
   return true;
 }
