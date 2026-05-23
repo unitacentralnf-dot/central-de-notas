@@ -44,11 +44,20 @@ export async function renderProtests(container, currentRole, initialObraId = '')
             <h2 class="panel-title">Regularidade Fiscal (Protestos por CNPJ)</h2>
           </div>
           
-          <div class="form-group" style="max-width: 400px;">
-            <label class="form-label" for="protest-obra-select">Selecionar Obra para Varredura</label>
-            <select id="protest-obra-select" class="form-control" aria-label="Selecionar obra para varredura de protestos">
-              ${obras.map(o => `<option value="${o.id}" ${o.id === activeObraId ? 'selected' : ''}>${o.name} (${o.cnpj})</option>`).join('')}
-            </select>
+          <div class="obra-info-banner" style="background: hsl(var(--bg-input)); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 14px 18px; display: flex; align-items: center; gap: 14px; margin-bottom: 8px;">
+            <div style="width: 40px; height: 40px; border-radius: var(--radius-sm); background: linear-gradient(135deg, hsl(var(--color-primary) / 0.2), hsl(var(--color-primary) / 0.05)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width: 20px; height: 20px; color: hsl(var(--color-primary));">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15M9 21v-3.375c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125V21" />
+              </svg>
+            </div>
+            <div>
+              <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--color-primary)); margin-bottom: 2px;">Obra em Varredura</div>
+              <div style="font-weight: 700; color: white; font-size: 1rem;">${selectedObra ? selectedObra.name : 'Nenhuma obra selecionada'}</div>
+              ${selectedObra ? `<div style="font-size: 0.78rem; color: hsl(var(--text-muted)); font-family: monospace;">CNPJ: ${selectedObra.cnpj}</div>` : ''}
+            </div>
+            <div style="margin-left: auto; font-size: 0.75rem; color: hsl(var(--text-dim)); text-align: right;">
+              Troque a obra pelo<br/>seletor global no topo ↑
+            </div>
           </div>
 
           <!-- Caixa de Ação de Varredura -->

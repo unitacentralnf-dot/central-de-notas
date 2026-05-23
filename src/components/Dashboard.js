@@ -1,5 +1,5 @@
 import { getObras, getBillsForPeriod, getNotifications, getRules, dispatchManualAlert, runCronCheckAlerts } from '../services/dataService.js';
-import { setGlobalObra } from '../main.js';
+import { setGlobalObra, navigateToView } from '../main.js';
 
 export async function renderDashboard(container, currentRole, activeObraId) {
   // Executar a verificação de alertas
@@ -48,7 +48,7 @@ export async function renderDashboard(container, currentRole, activeObraId) {
       <!-- Grid de Indicadores Principais -->
       <section class="summary-grid" aria-label="Métricas Rápidas">
         <!-- Card 1: Saúde Fiscal -->
-        <div class="card-premium ${obrasComProtesto > 0 ? 'danger' : 'success'}">
+        <div class="card-premium ${obrasComProtesto > 0 ? 'danger' : 'success'}" id="card-fiscal" style="cursor: pointer;">
           <div class="card-header">
             <span class="card-title">Situação Fiscal (CNPJ)</span>
             <div class="card-icon ${obrasComProtesto > 0 ? 'danger' : 'success'}">
@@ -66,7 +66,7 @@ export async function renderDashboard(container, currentRole, activeObraId) {
         </div>
 
         <!-- Card 2: Contas Pendentes -->
-        <div class="card-premium ${faturasVencidas > 0 ? 'danger' : (faturasPendentes > 0 ? 'warning' : 'success')}">
+        <div class="card-premium ${faturasVencidas > 0 ? 'danger' : (faturasPendentes > 0 ? 'warning' : 'success')}" id="card-faturas" style="cursor: pointer;">
           <div class="card-header">
             <span class="card-title">Faturas Pendentes (Maio/26)</span>
             <div class="card-icon ${faturasVencidas > 0 ? 'danger' : (faturasPendentes > 0 ? 'warning' : 'success')}">
@@ -82,7 +82,7 @@ export async function renderDashboard(container, currentRole, activeObraId) {
         </div>
 
         <!-- Card 3: Custos do Mês -->
-        <div class="card-premium primary">
+        <div class="card-premium primary" id="card-financeiro" style="cursor: pointer;">
           <div class="card-header">
             <span class="card-title">Comprometimento Financeiro</span>
             <div class="card-icon primary">
@@ -222,7 +222,21 @@ export async function renderDashboard(container, currentRole, activeObraId) {
   container.innerHTML = html;
 
   // Vinculação de Eventos
-  // 1. Botão de ir para faturas filtrando por obra
+  // 1. Cliques nos cards principais para navegar
+  const cardFiscal = container.querySelector('#card-fiscal');
+  if (cardFiscal) {
+    cardFiscal.addEventListener('click', () => navigateToView('protests'));
+  }
+  const cardFaturas = container.querySelector('#card-faturas');
+  if (cardFaturas) {
+    cardFaturas.addEventListener('click', () => navigateToView('fixed-bills'));
+  }
+  const cardFinanceiro = container.querySelector('#card-financeiro');
+  if (cardFinanceiro) {
+    cardFinanceiro.addEventListener('click', () => navigateToView('dda'));
+  }
+
+  // 2. Botão de ir para faturas filtrando por obra
   container.querySelectorAll('.nav-to-bills').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const obraId = e.currentTarget.getAttribute('data-obra');

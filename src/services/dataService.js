@@ -338,3 +338,95 @@ export async function loginUser(email, senha) {
     welcome: `Olá, ${data.nome.split(' ')[0]}! Bem-vindo de volta.`
   };
 }
+
+// --- MÓDULO SOLICITAÇÕES DE ACESSO ---
+export async function submitAccessRequest({ nome, email, obra, mensagem }) {
+  try {
+    const { error } = await supabase.from('solicitacoes_acesso').insert([{
+      nome,
+      email,
+      obra_solicitada: obra,
+      mensagem: mensagem || '',
+      status: 'pendente'
+    }]);
+    if (error) throw error;
+    return true;
+  } catch (err) {
+    console.error('Erro ao enviar solicitação:', err);
+    return false;
+  }
+}
+
+export async function getAccessRequests() {
+  const { data, error } = await supabase
+    .from('solicitacoes_acesso')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) {
+    console.error('Erro ao buscar solicitações:', error);
+    return [];
+  }
+  return data.map(r => ({
+    id: r.id,
+    nome: r.nome,
+    email: r.email,
+    obraSolicitada: r.obra_solicitada,
+    mensagem: r.mensagem,
+    status: r.status,
+    createdAt: r.created_at,
+  }));
+}
+
+export async function updateAccessRequest(id, updates) {
+  const { error } = await supabase
+    .from('solicitacoes_acesso')
+    .update(updates)
+    .eq('id', id);
+  if (error) throw error;
+  return true;
+}
+
+// --- MÓDULO USUÁRIOS (MASTER) ---
+export async function getUsuarios() {
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('*')
+    .order('nome', { ascending: true });
+  if (error) {
+    console.error('Erro ao buscar usuários:', error);
+    return [];
+  }
+  return data.map(u => ({
+    id: u.id,
+    nome: u.nome,
+    email: u.email,
+    role: u.role,
+    initials: u.avatar_iniciais,
+    createdAt: u.created_at,
+  }));
+}
+
+export async function createUsuario({ nome, email, senha, role }) {
+  const iniciais = nome.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase();
+  const { data, error } = await supabase.from('usuarios').insert([{
+    nome,
+    email,
+    senha,
+    role,
+    avatar_iniciais: iniciais,
+  }]).select();
+  if (error) throw error;
+  return data[0];
+}
+
+export async function updateUsuario(id, updates) {
+  const { error } = await supabase.from('usuarios').update(updates).eq('id', id);
+  if (error) throw error;
+  return true;
+}
+
+export async function deleteUsuario(id) {
+  const { error } = await supabase.from('usuarios').delete().eq('id', id);
+  if (error) throw error;
+  return true;
+}

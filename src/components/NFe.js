@@ -10,6 +10,10 @@ export async function renderNFe(container, currentRole, activeObraId) {
   const nfes = await getNFesByObra(activeObraId);
   const isAdm = currentRole === 'adm';
 
+  const totalNFe = nfes.length;
+  const valorTotal = nfes.reduce((acc, n) => acc + n.value, 0);
+  const aManifestar = nfes.filter(n => n.manifestStatus === 'pendente').length;
+
   const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
   const html = `
@@ -27,6 +31,36 @@ export async function renderNFe(container, currentRole, activeObraId) {
           Consultar Novas NFs (Sefaz)
         </button>
       </div>
+
+      <!-- Painel de Métricas da NFe -->
+      <section class="summary-grid" style="margin-bottom: 24px;" aria-label="Métricas de Notas Fiscais">
+        <div class="card-premium success" style="padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase;">Total de Notas</span>
+            <span style="font-size: 1.25rem;">📊</span>
+          </div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-top: 8px;">${totalNFe} NF-es</div>
+          <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); margin-top: 4px;">Recebidas da Sefaz</div>
+        </div>
+
+        <div class="card-premium primary" style="padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase;">Valor Total Acumulado</span>
+            <span style="font-size: 1.25rem;">💰</span>
+          </div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-top: 8px;">${fmt(valorTotal)}</div>
+          <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); margin-top: 4px;">Volume financeiro</div>
+        </div>
+
+        <div class="card-premium ${aManifestar > 0 ? 'warning' : 'success'}" style="padding: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase;">Notas a Manifestar</span>
+            <span style="font-size: 1.25rem;">⚖️</span>
+          </div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-top: 8px;">${aManifestar} Pendentes</div>
+          <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); margin-top: 4px;">Exige ação imediata</div>
+        </div>
+      </section>
 
       <!-- Container de Sincronização Animada -->
       <div id="sync-animation-container" style="display: none; margin-bottom: 24px;">
@@ -78,7 +112,7 @@ export async function renderNFe(container, currentRole, activeObraId) {
                   <tr>
                     <td>
                       <div style="font-weight: 600; color: white;">NF-e nº ${n.number}</div>
-                      <div style="font-size: 0.75rem; color: hsl(var(--text-dim));">Série: ${n.serie}</div>
+                      <div style="font-size: 0.75rem; color: hsl(var(--text-dim));">Série: ${n.serie} | Chave: ...${n.accessKey ? n.accessKey.slice(-8) : ''}</div>
                     </td>
                     <td>
                       <div style="font-weight: 500; color: white;">${n.issuer}</div>
@@ -208,9 +242,12 @@ function openNfeDetailModal(nfeId, nfes) {
 
   modalBody.innerHTML = `
     <div>
-      <div style="font-size: 0.8rem; background-color: hsl(var(--bg-input)); border: 1px solid var(--border-light); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 20px;">
-        <span style="font-weight:600; color: white;">Chave de Acesso Sefaz (44 dígitos):</span><br>
-        <span style="font-family: monospace; font-size: 0.85rem; letter-spacing: 0.5px; color: hsl(var(--color-primary)); word-break: break-all;">${nfe.accessKey}</span>
+      <div style="font-size: 0.8rem; background-color: hsl(var(--bg-input)); border: 1px solid var(--border-light); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+        <div>
+          <span style="font-weight:600; color: white;">Chave de Acesso Sefaz (44 dígitos):</span><br>
+          <span id="nfe-access-key-text" style="font-family: monospace; font-size: 0.85rem; letter-spacing: 0.5px; color: hsl(var(--color-primary)); word-break: break-all;">${nfe.accessKey}</span>
+        </div>
+        <button class="btn btn-secondary btn-sm" id="btn-copy-key" style="white-space: nowrap; padding: 6px 10px;">Copiar Chave</button>
       </div>
 
       <h4 style="color: white; margin-bottom: 12px; font-size: 0.9rem; text-transform: uppercase;">Itens da Nota Fiscal</h4>
@@ -249,6 +286,23 @@ function openNfeDetailModal(nfeId, nfes) {
   modalFooter.innerHTML = `
     <button class="btn btn-secondary" id="btn-close-modal">Fechar</button>
   `;
+
+  // Copiar chave de acesso
+  const btnCopy = modalBody.querySelector('#btn-copy-key');
+  if (btnCopy) {
+    btnCopy.addEventListener('click', () => {
+      navigator.clipboard.writeText(nfe.accessKey).then(() => {
+        btnCopy.textContent = 'Copiado!';
+        btnCopy.style.backgroundColor = 'rgba(16, 185, 129, 0.15)';
+        btnCopy.style.color = 'hsl(var(--color-success))';
+        setTimeout(() => {
+          btnCopy.textContent = 'Copiar Chave';
+          btnCopy.style.backgroundColor = '';
+          btnCopy.style.color = '';
+        }, 2000);
+      });
+    });
+  }
 
   modal.classList.add('active');
 

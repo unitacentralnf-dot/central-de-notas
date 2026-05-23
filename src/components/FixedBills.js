@@ -1,5 +1,5 @@
 import { 
-  getObras, getRules, getBillsForPeriod, saveRule, deleteRule, saveBill, 
+  getObras, getRules, getRulesByObra, getBillsForPeriod, saveRule, deleteRule, saveBill, 
   getHistoricalData, simulateOCR, dispatchManualAlert, addNotification 
 } from '../services/dataService.js';
 

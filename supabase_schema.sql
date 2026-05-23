@@ -113,3 +113,28 @@ CREATE POLICY "Permitir leitura anonima" ON public.boletos_dda FOR SELECT USING 
 
 DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.usuarios;
 CREATE POLICY "Permitir leitura anonima" ON public.usuarios FOR SELECT USING (true);
+
+-- Criação da tabela de Solicitações de Acesso
+CREATE TABLE IF NOT EXISTS public.solicitacoes_acesso (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    obra_solicitada VARCHAR(255) NOT NULL,
+    mensagem TEXT,
+    status VARCHAR(50) DEFAULT 'pendente',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE public.solicitacoes_acesso ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.solicitacoes_acesso;
+CREATE POLICY "Permitir leitura anonima" ON public.solicitacoes_acesso FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Permitir escrita anonima" ON public.solicitacoes_acesso;
+CREATE POLICY "Permitir escrita anonima" ON public.solicitacoes_acesso FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Permitir update anonimo" ON public.solicitacoes_acesso;
+CREATE POLICY "Permitir update anonimo" ON public.solicitacoes_acesso FOR UPDATE USING (true);
+
+DROP POLICY IF EXISTS "Permitir delete anonimo" ON public.solicitacoes_acesso;
+CREATE POLICY "Permitir delete anonimo" ON public.solicitacoes_acesso FOR DELETE USING (true);

@@ -34,6 +34,45 @@
           </button>
         </form>
 
+        <!-- Link de Solicitação de Acesso -->
+        <div style="text-align: center; margin-top: 16px;">
+          <button id="btn-show-request-access" style="background: none; border: none; color: hsl(var(--color-primary)); font-size: 0.82rem; cursor: pointer; text-decoration: underline; opacity: 0.8;">
+            Ainda não tem acesso? Solicitar ao administrador
+          </button>
+        </div>
+
+        <!-- Formulário de Solicitação (oculto inicialmente) -->
+        <div id="request-access-form" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-light);">
+          <h3 style="font-size: 0.9rem; font-weight: 700; color: white; margin-bottom: 14px; text-align: center;">Solicitar Acesso ao Sistema</h3>
+          <form id="access-request-form">
+            <div class="form-group">
+              <label class="form-label" for="req-nome">Seu Nome Completo</label>
+              <input type="text" id="req-nome" class="form-control" placeholder="João da Silva" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="req-email">Seu E-mail Corporativo</label>
+              <input type="email" id="req-email" class="form-control" placeholder="joao@empresa.com.br" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="req-obra">Obra / Empreendimento</label>
+              <input type="text" id="req-obra" class="form-control" placeholder="Ex: Residencial Bella Vista" required />
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+              <label class="form-label" for="req-mensagem">Justificativa (opcional)</label>
+              <textarea id="req-mensagem" class="form-control" rows="2" placeholder="Por que você precisa de acesso?"></textarea>
+            </div>
+            <div id="request-success-msg" style="display: none; background-color: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 10px; border-radius: var(--radius-sm); color: hsl(var(--color-success)); font-size: 0.8rem; text-align: center; margin-bottom: 12px;">
+              ✅ Solicitação enviada! O administrador será notificado.
+            </div>
+            <div id="request-error-msg" style="display: none; background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: var(--radius-sm); color: hsl(var(--color-danger)); font-size: 0.8rem; text-align: center; margin-bottom: 12px;">
+              Erro ao enviar. Tente novamente.
+            </div>
+            <button type="submit" class="btn btn-secondary" style="width: 100%; justify-content: center;">
+              Enviar Solicitação de Acesso
+            </button>
+          </form>
+        </div>
+
         <div class="login-divider">Ou clique para simular</div>
 
         <!-- Grid de Demonstração Interativa (Um clique) -->
@@ -64,6 +103,13 @@
             <div class="demo-user-info">
               <span class="demo-user-name">Arthur Albuquerque</span>
               <span class="demo-user-role">Diretor de Operações (GGO)</span>
+            </div>
+          </div>
+          <div class="demo-user-card master" data-email="master@unitasistema.com.br" data-pass="unitamaster2026">
+            <div class="demo-avatar" style="background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(280, 80%, 55%));">MS</div>
+            <div class="demo-user-info">
+              <span class="demo-user-name">Sistema Master</span>
+              <span class="demo-user-role">Administrador Geral do Sistema</span>
             </div>
           </div>
         </div>
@@ -116,6 +162,16 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
             </svg>
             <span>Regularidade (CNPJ)</span>
+          </a>
+
+          <!-- Item Admin Master (oculto por padrão, revelado via JS para role=master) -->
+          <div class="menu-category" id="nav-master-category" style="display: none;">Administração</div>
+          <a class="menu-item" data-view="master" id="nav-master" style="display: none;">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+            <span>Painel Master</span>
           </a>
         </nav>
         
