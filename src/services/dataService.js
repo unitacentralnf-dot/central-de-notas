@@ -58,7 +58,42 @@ export function initializeData() { provider.mockInitializeData(); }
 export function addNotification(type, message) { provider.mockAddNotification(type, message); }
 
 // --- MÓDULO PROTESTOS ---
-export async function checkCnpjStatus(cnpj) { return provider.mockCheckCnpjStatus(cnpj); }
+export async function checkCnpjStatus(cnpj) {
+  const cleanCnpj = cnpj.replace(/\D/g, '');
+  if (cleanCnpj.length !== 14) throw new Error('CNPJ inválido.');
+  try {
+    const res = await fetch(`https://publica.cnpj.ws/cnpj/${cleanCnpj}`, {
+      headers: { 'Accept': 'application/json' },
+    });
+    if (!res.ok) {
+      if (res.status === 404) return { cnpj: cleanCnpj, situacao: 'INEXISTENTE', protestStatus: 'clean' };
+      if (res.status === 429) throw new Error('Rate limit CNPJ.ws (3 req/min).');
+      throw new Error(`HTTP ${res.status}`);
+    }
+    const data = await res.json();
+    return {
+      cnpj: data.cnpj,
+      razaoSocial: data.razao_social || data.nome_fantasia || 'N/D',
+      situacao: data.situacao_cadastral || 'DESCONHECIDA',
+      ultimaAtualizacao: data.data_situacao_cadastral?.split('T')[0] || new Date().toISOString().split('T')[0],
+      dataAbertura: data.data_abertura?.split('T')[0] || '',
+      porte: data.porte || '',
+      naturezaJuridica: data.natureza_juridica || '',
+      cnae: data.cnae_fiscal_descricao || '',
+      logradouro: data.logradouro || '',
+      bairro: data.bairro || '',
+      municipio: data.municipio || '',
+      uf: data.uf || '',
+      cep: data.cep || '',
+      telefone: data.telefone1 || '',
+      email: data.email || '',
+      protestStatus: data.situacao_cadastral === 'ATIVA' ? 'clean' : 'dirty',
+    };
+  } catch (err) {
+    console.error('Erro CNPJ.ws:', err);
+    throw err;
+  }
+}
 export async function getProtestsByObra(obraId) { return provider.mockGetProtestsByObra(obraId); }
 export async function resolveProtestsForObra(obraId) { return provider.mockResolveProtestsForObra(obraId); }
 
