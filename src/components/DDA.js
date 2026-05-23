@@ -1,15 +1,15 @@
 import { getDDABills, syncDDABaaS, linkDDAToNFe, linkDDAToFixedBill } from '../services/ddaService.js';
 import { getObras, getNFesByObra, getRulesByObra } from '../services/dataService.js';
 
-export function renderDDA(container, currentRole, activeObraId) {
-  const obras = getObras();
+export async function renderDDA(container, currentRole, activeObraId) {
+  const obras = await getObras();
   if (!activeObraId && obras.length > 0) {
     activeObraId = obras[0].id;
   }
   const selectedObra = obras.find(o => o.id === activeObraId);
-  const boletosDda = getDDABills(activeObraId);
-  const nfes = getNFesByObra(activeObraId);
-  const rules = getRulesByObra(activeObraId);
+  const boletosDda = await getDDABills(activeObraId);
+  const nfes = await getNFesByObra(activeObraId);
+  const rules = await getRulesByObra(activeObraId);
   const isAdm = currentRole === 'adm';
 
   const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -66,37 +66,37 @@ export function renderDDA(container, currentRole, activeObraId) {
               let matchHtml = '';
               if (match) {
                 const isNfe = match.type === 'nfe';
-                matchHtml = \`
+                matchHtml = `
                   <div style="margin-top: 12px; padding: 8px; background-color: rgba(16, 185, 129, 0.1); border-left: 3px solid hsl(158, 82%, 46%); border-radius: 4px; font-size: 0.8rem;">
                     <strong style="color: hsl(158, 82%, 46%);">Sugestão de Vínculo:</strong> 
-                    Encontrado \${isNfe ? 'NF-e correspondente' : 'Regra de Conta Fixa compatível'} (\${match.confidence}).
+                    Encontrado ${isNfe ? 'NF-e correspondente' : 'Regra de Conta Fixa compatível'} (${match.confidence}).
                     <div style="margin-top: 8px;">
-                      <button class="btn btn-primary btn-sm btn-link-dda" data-id="\${b.id}" data-match-type="\${match.type}" data-match-id="\${match.obj.id}" \${!isAdm ? 'disabled' : ''}>
-                        \${isNfe ? 'Vincular à NFe e Lançar' : 'Vincular à Conta Fixa'}
+                      <button class="btn btn-primary btn-sm btn-link-dda" data-id="${b.id}" data-match-type="${match.type}" data-match-id="${match.obj.id}" ${!isAdm ? 'disabled' : ''}>
+                        ${isNfe ? 'Vincular à NFe e Lançar' : 'Vincular à Conta Fixa'}
                       </button>
                     </div>
                   </div>
-                \`;
+                `;
               }
 
-              return \`
+              return `
                 <div class="card-premium" style="display: flex; flex-direction: column; gap: 8px; padding: 16px;">
                   <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                      <div style="font-weight: 600; color: white;">\${b.emissorNome}</div>
-                      <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); font-family: monospace;">CNPJ: \${b.emissorCnpj}</div>
+                      <div style="font-weight: 600; color: white;">${b.emissorNome}</div>
+                      <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); font-family: monospace;">CNPJ: ${b.emissorCnpj}</div>
                     </div>
                     <div style="text-align: right;">
-                      <div style="font-weight: 700; color: hsl(var(--color-primary)); font-size: 1.1rem;">\${fmt(b.valor)}</div>
-                      <div style="font-size: 0.75rem; color: hsl(var(--text-muted));">Vence: \${new Date(b.dataVencimento).toLocaleDateString('pt-BR')}</div>
+                      <div style="font-weight: 700; color: hsl(var(--color-primary)); font-size: 1.1rem;">${fmt(b.valor)}</div>
+                      <div style="font-size: 0.75rem; color: hsl(var(--text-muted));">Vence: ${new Date(b.dataVencimento).toLocaleDateString('pt-BR')}</div>
                     </div>
                   </div>
                   <div style="font-family: monospace; font-size: 0.7rem; color: hsl(var(--text-dim)); background: rgba(0,0,0,0.2); padding: 4px 8px; border-radius: 4px; letter-spacing: 0.5px;">
-                    \${b.linhaDigitavel}
+                    ${b.linhaDigitavel}
                   </div>
-                  \${matchHtml}
+                  ${matchHtml}
                 </div>
-              \`;
+              `;
             }).join('')}
           </div>
         </div>
@@ -110,18 +110,18 @@ export function renderDDA(container, currentRole, activeObraId) {
             ${processados.length === 0 ? '<div style="color: hsl(var(--text-dim)); font-size: 0.85rem; padding: 20px; text-align: center;">Nenhum boleto processado.</div>' : ''}
             ${processados.map(b => {
               let badgeText = b.status === 'vinculado_nfe' ? 'Vinculado NFe' : 'Vinculado Fixo';
-              return \`
+              return `
                 <div style="padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
                   <div style="display: flex; justify-content: space-between;">
-                    <div style="font-weight: 500; font-size: 0.85rem; color: white;">\${b.emissorNome}</div>
-                    <span class="badge badge-success"><span class="badge-dot"></span>\${badgeText}</span>
+                    <div style="font-weight: 500; font-size: 0.85rem; color: white;">${b.emissorNome}</div>
+                    <span class="badge badge-success"><span class="badge-dot"></span>${badgeText}</span>
                   </div>
                   <div style="display: flex; justify-content: space-between; margin-top: 8px;">
-                    <div style="font-size: 0.85rem; color: hsl(var(--text-muted));">\${fmt(b.valor)}</div>
-                    <div style="font-size: 0.75rem; color: hsl(var(--text-dim));">\${new Date(b.dataVencimento).toLocaleDateString('pt-BR')}</div>
+                    <div style="font-size: 0.85rem; color: hsl(var(--text-muted));">${fmt(b.valor)}</div>
+                    <div style="font-size: 0.75rem; color: hsl(var(--text-dim));">${new Date(b.dataVencimento).toLocaleDateString('pt-BR')}</div>
                   </div>
                 </div>
-              \`;
+              `;
             }).join('')}
           </div>
         </div>
@@ -131,7 +131,6 @@ export function renderDDA(container, currentRole, activeObraId) {
 
   container.innerHTML = html;
 
-  // Botão Sincronizar
   const btnSync = container.querySelector('#btn-sync-dda');
   const animContainer = container.querySelector('#sync-animation-dda');
   if (btnSync && animContainer) {
@@ -139,24 +138,24 @@ export function renderDDA(container, currentRole, activeObraId) {
       btnSync.disabled = true;
       animContainer.style.display = 'block';
       await syncDDABaaS(activeObraId);
-      renderDDA(container, currentRole, activeObraId);
+      await renderDDA(container, currentRole, activeObraId);
     });
   }
 
   // Botões de Vincular
   container.querySelectorAll('.btn-link-dda').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       const ddaId = e.currentTarget.getAttribute('data-id');
       const matchType = e.currentTarget.getAttribute('data-match-type');
       const matchId = e.currentTarget.getAttribute('data-match-id');
       
       if (matchType === 'nfe') {
-        linkDDAToNFe(ddaId, matchId);
+        await linkDDAToNFe(ddaId, matchId);
       } else {
-        linkDDAToFixedBill(ddaId, matchId);
+        await linkDDAToFixedBill(ddaId, matchId);
       }
       
-      renderDDA(container, currentRole, activeObraId);
+      await renderDDA(container, currentRole, activeObraId);
     });
   });
 }

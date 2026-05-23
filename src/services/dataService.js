@@ -267,3 +267,12 @@ export async function getHistoricalData(ruleId) {
     return { mes, ano, valorReal: parseFloat(f.valor) };
   });
 }
+
+export function initializeData() {
+  console.log('Dados inicializados (Nuvem/Supabase)');
+}
+
+export function addNotification(type, message) {
+  console.log(`[Notification - ${type}] ${message}`);
+  // Pode ser implementado posteriormente no UI
+}

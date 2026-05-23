@@ -8,7 +8,7 @@ let activeMes = '05'; // Maio fixado para o protótipo
 let activeAno = '2026';
 let selectedHistoryRuleId = '';
 
-export function renderFixedBills(container, currentRole, activeObraId) {
+export async function renderFixedBills(container, currentRole, activeObraId) {
   // Inicializa filtro de obra com o valor temporário se houver (vindo do clique no dashboard)
   const tempFilter = localStorage.getItem('temp_filter_obra');
   if (tempFilter) {
@@ -17,7 +17,7 @@ export function renderFixedBills(container, currentRole, activeObraId) {
     activeTab = 'monthly';
   }
 
-  const obras = getObras();
+  const obras = await getObras();
   if (!activeObraId && obras.length > 0) {
     activeObraId = obras[0].id;
   }
@@ -40,32 +40,31 @@ export function renderFixedBills(container, currentRole, activeObraId) {
   container.innerHTML = html;
 
   // Vinculação de Abas
-  document.getElementById('tab-monthly-btn').addEventListener('click', () => {
+  document.getElementById('tab-monthly-btn').addEventListener('click', async () => {
     activeTab = 'monthly';
     document.getElementById('tab-monthly-btn').classList.add('active');
     document.getElementById('tab-rules-btn').classList.remove('active');
-    renderActiveTabContent(currentRole, activeObraId);
+    await renderActiveTabContent(currentRole, activeObraId);
   });
 
-  document.getElementById('tab-rules-btn').addEventListener('click', () => {
+  document.getElementById('tab-rules-btn').addEventListener('click', async () => {
     activeTab = 'rules';
     document.getElementById('tab-rules-btn').classList.add('active');
     document.getElementById('tab-monthly-btn').classList.remove('active');
-    renderActiveTabContent(currentRole, activeObraId);
+    await renderActiveTabContent(currentRole, activeObraId);
   });
 
-  renderActiveTabContent(currentRole, activeObraId);
+  await renderActiveTabContent(currentRole, activeObraId);
 }
 
-function renderActiveTabContent(currentRole, activeObraId) {
+async function renderActiveTabContent(currentRole, activeObraId) {
   const container = document.getElementById('tab-content-container');
   if (!container) return;
 
   if (activeTab === 'monthly') {
-    renderMonthlyView(container, currentRole, activeObraId);
-    await renderMonthlyView(tabContainer, currentRole, activeObraId);
+    await renderMonthlyView(container, currentRole, activeObraId);
   } else {
-    await renderRulesView(tabContainer, currentRole, activeObraId);
+    await renderRulesView(container, currentRole, activeObraId);
   }
 }
 
