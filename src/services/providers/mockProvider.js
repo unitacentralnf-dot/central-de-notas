@@ -240,64 +240,46 @@ export async function mockResolveProtestsForObra(obraId) {
 export async function mockLoginUser(email, senha) {
   if (!email || !senha) return null;
 
-  // 1. Tenta autenticar via Supabase Auth (migração concluída)
+  let userRecord = null;
+  let authUserId = null;
+
+  // 1. Tenta autenticar via Supabase Auth
   if (supabase) {
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password: senha,
+      email, password: senha,
     });
-
     if (!authError && authData?.user) {
-      const userId = authData.user.id;
-
-      // Tenta localizar por auth_user_id (coluna pode não existir no schema)
-      const { data: userData } = await supabase
-        .from('usuarios')
-        .select('*')
-        .eq('auth_user_id', userId)
-        .maybeSingle()
-        .catch(() => ({ data: null }));
-
-      const foundUser = userData || (
-        await supabase.from('usuarios').select('*').eq('email', email).single()
-      ).data;
-
-      if (foundUser) {
-        return {
-          id: foundUser.id,
-          authUserId: userId,
-          name: foundUser.nome,
-          email: foundUser.email,
-          role: foundUser.role,
-          initials: foundUser.avatar_iniciais,
-          obraId: null,
-          welcome: `Olá, ${foundUser.nome.split(' ')[0]}! Bem-vindo de volta.`
-        };
-      }
+      authUserId = authData.user.id;
     }
   }
 
-  // 2. Fallback: tenta o método antigo (coluna senha ainda existe)
+  // 2. Busca o registro na tabela usuarios (por email, coluna sempre existe)
   const { data, error } = await supabase
     .from('usuarios')
     .select('*')
     .eq('email', email)
-    .eq('senha', senha)
     .single();
-    
-  if (error || !data) {
-    console.error('Erro de autenticação:', error);
-    return null;
+
+  if (data && !error) {
+    userRecord = data;
   }
-  return {
-    id: data.id,
-    name: data.nome,
-    email: data.email,
-    role: data.role,
-    initials: data.avatar_iniciais,
-    obraId: data.obra_id,
-    welcome: `Olá, ${data.nome.split(' ')[0]}! Bem-vindo de volta.`
-  };
+
+  // 3. Se achou no banco, retorna (Auth é bônus, não requisito)
+  if (userRecord) {
+    return {
+      id: userRecord.id,
+      authUserId,
+      name: userRecord.nome,
+      email: userRecord.email,
+      role: userRecord.role,
+      initials: userRecord.avatar_iniciais,
+      obraId: null,
+      welcome: `Olá, ${userRecord.nome.split(' ')[0]}! Bem-vindo de volta.`
+    };
+  }
+
+  console.error('Usuário não encontrado na tabela usuarios:', email);
+  return null;
 }
 
 export async function mockSubmitAccessRequest({ nome, email, obra, mensagem }) {
