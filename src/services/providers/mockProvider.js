@@ -249,22 +249,29 @@ export async function mockLoginUser(email, senha) {
 
     if (!authError && authData?.user) {
       const userId = authData.user.id;
-      const { data: userData, error: userError } = await supabase
+
+      // Tenta localizar por auth_user_id (coluna pode não existir no schema)
+      const { data: userData } = await supabase
         .from('usuarios')
         .select('*')
         .eq('auth_user_id', userId)
-        .single();
+        .maybeSingle()
+        .catch(() => ({ data: null }));
 
-      if (!userError && userData) {
+      const foundUser = userData || (
+        await supabase.from('usuarios').select('*').eq('email', email).single()
+      ).data;
+
+      if (foundUser) {
         return {
-          id: userData.id,
+          id: foundUser.id,
           authUserId: userId,
-          name: userData.nome,
-          email: userData.email,
-          role: userData.role,
-          initials: userData.avatar_iniciais,
-          obraId: userData.obra_id,
-          welcome: `Olá, ${userData.nome.split(' ')[0]}! Bem-vindo de volta.`
+          name: foundUser.nome,
+          email: foundUser.email,
+          role: foundUser.role,
+          initials: foundUser.avatar_iniciais,
+          obraId: null,
+          welcome: `Olá, ${foundUser.nome.split(' ')[0]}! Bem-vindo de volta.`
         };
       }
     }
@@ -338,7 +345,7 @@ export async function mockUpdateAccessRequest(id, updates) {
 export async function mockGetUsuarios() {
   const { data, error } = await supabase
     .from('usuarios')
-    .select('*, obras(nome)')
+    .select('*')
     .order('nome', { ascending: true });
   if (error) {
     console.error('Erro ao buscar usuários:', error);
@@ -347,49 +354,37 @@ export async function mockGetUsuarios() {
   return data.map(u => ({
     id: u.id, nome: u.nome, email: u.email,
     role: u.role, initials: u.avatar_iniciais,
-    obraId: u.obra_id,
-    obraNome: u.obras ? u.obras.nome : 'Todas as Obras (Master/Diretor)',
+    obraId: null,
+    obraNome: 'Todas as Obras (Master/Diretor)',
     createdAt: u.created_at,
   }));
 }
 
 export async function mockCreateUsuario({ nome, email, senha, role, obraId }) {
   const iniciais = nome.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase();
-  let authUserId = null;
 
-  // 1. Tenta criar no Supabase Auth (se service_role key estiver configurada)
+  // 1. Tenta criar no Supabase Auth
   if (supabaseAdmin) {
     try {
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      await supabaseAdmin.auth.admin.createUser({
         email,
         password: senha,
         email_confirm: true,
-        user_metadata: { nome, role, obra_id: obraId }
+        user_metadata: { nome, role }
       });
-      if (!authError && authData?.user) {
-        authUserId = authData.user.id;
-      } else {
-        console.warn('Erro ao criar usuario no Auth, fallback para criacao direta:', authError);
-      }
     } catch (e) {
-      console.warn('Exceção ao criar usuario no Auth, fallback:', e.message);
+      if (!e.message?.includes('already been registered')) {
+        console.warn('Auth não disponível, criando apenas na tabela:', e.message);
+      }
     }
   }
 
-  // 2. Insere na tabela usuarios (com ou sem auth_user_id)
-  const insertData = {
-    nome, email, role,
-    avatar_iniciais: iniciais,
-    obra_id: obraId || null
-  };
-  if (authUserId) {
-    insertData.auth_user_id = authUserId;
-  } else {
-    insertData.senha = senha; // fallback: salva senha em texto puro
-  }
-
+  // 2. Insere na tabela usuarios (apenas colunas existentes no schema atual)
   const db = supabaseAdmin || supabase;
-  const { data, error } = await db.from('usuarios').insert([insertData]).select();
+  const { data, error } = await db.from('usuarios').upsert({
+    nome, email, senha, role,
+    avatar_iniciais: iniciais,
+  }, { onConflict: 'email' }).select();
   if (error) throw error;
   return data[0];
 }
