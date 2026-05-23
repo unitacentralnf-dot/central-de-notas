@@ -8,8 +8,70 @@
     <meta name="description" content="Central de gerenciamento de faturas fixas de canteiros de obras e acompanhamento de protestos fiscais por CNPJ." />
   </head>
   <body>
-    <div id="app">
-      <!-- Barra Lateral de Navegação -->
+    <!-- Tela de Login Premium (SaaS & Corporativo) -->
+    <div id="login-screen" class="login-overlay active">
+      <div class="login-card">
+        <div class="login-brand">
+          <div class="login-logo">N</div>
+          <h2 class="login-title">Central de Notas</h2>
+          <p class="login-subtitle">Gestão Integrada de Obras & Financeiro</p>
+        </div>
+
+        <form id="login-form">
+          <div class="form-group">
+            <label class="form-label" for="login-email">E-mail Corporativo</label>
+            <input type="email" id="login-email" class="form-control" placeholder="usuario@unita.com.br" required autocomplete="username">
+          </div>
+          <div class="form-group" style="margin-bottom: 24px;">
+            <label class="form-label" for="login-password">Senha de Acesso</label>
+            <input type="password" id="login-password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+          <div id="login-error-msg" style="display: none; background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 12px; border-radius: var(--radius-sm); color: hsl(var(--color-danger)); font-size: 0.8rem; margin-bottom: 16px; text-align: center;">
+            Credenciais incorretas. Tente novamente.
+          </div>
+          <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding-block: 10px;">
+            Entrar no Sistema
+          </button>
+        </form>
+
+        <div class="login-divider">Ou clique para simular</div>
+
+        <!-- Grid de Demonstração Interativa (Um clique) -->
+        <div class="demo-users-grid">
+          <div class="demo-user-card adm" data-email="master@unita.com.br" data-pass="masterunita2026">
+            <div class="demo-avatar">CS</div>
+            <div class="demo-user-info">
+              <span class="demo-user-name">Carlos Silva</span>
+              <span class="demo-user-role">Administrador da Obra (ADM)</span>
+            </div>
+          </div>
+          <div class="demo-user-card eng" data-email="roberto@unita.com.br" data-pass="robertounita2026">
+            <div class="demo-avatar">RD</div>
+            <div class="demo-user-info">
+              <span class="demo-user-name">Eng. Roberto Dias</span>
+              <span class="demo-user-role">Engenheiro da Obra (Consultor)</span>
+            </div>
+          </div>
+          <div class="demo-user-card fin" data-email="mariana@unita.com.br" data-pass="marianaunita2026">
+            <div class="demo-avatar">ML</div>
+            <div class="demo-user-info">
+              <span class="demo-user-name">Mariana Lins</span>
+              <span class="demo-user-role">Controladora Financeira (Consultor)</span>
+            </div>
+          </div>
+          <div class="demo-user-card dir" data-email="arthur@unita.com.br" data-pass="arthurunita2026">
+            <div class="demo-avatar">AA</div>
+            <div class="demo-user-info">
+              <span class="demo-user-name">Arthur Albuquerque</span>
+              <span class="demo-user-role">Diretor de Operações (GGO)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Container da Área Logada (Inicialmente Oculto) -->
+    <div id="app" style="display: none;">
       <aside class="sidebar">
         <div class="brand">
           <div class="brand-logo">N</div>
@@ -58,12 +120,20 @@
         </nav>
         
         <!-- Painel do Usuário Logado -->
-        <div class="user-profile-panel">
+        <div class="user-profile-panel" style="border-bottom: none; margin-bottom: 0;">
           <div class="user-avatar" id="sidebar-user-avatar">CS</div>
           <div class="user-info">
             <span class="user-name" id="sidebar-user-name">Carlos Silva</span>
             <span class="user-role" id="sidebar-user-role">Administrador da Obra</span>
           </div>
+        </div>
+        <div class="logout-btn-container">
+          <button class="btn-logout" id="btn-logout-sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" style="width: 16px; height: 16px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3.003-3-3-3m0 0 3-3m-3 3H21" />
+            </svg>
+            <span>Sair do Sistema</span>
+          </button>
         </div>
       </aside>
 
@@ -94,16 +164,6 @@
               </select>
             </div>
             
-            <!-- Seletor de Perfil Simulado -->
-            <div class="profile-selector-container">
-              <span class="profile-label">Simular:</span>
-              <select id="profileSelect" class="profile-select" aria-label="Selecionar perfil de simulação">
-                <option value="adm">Administrativo da Obra (Alimentador)</option>
-                <option value="engenheiro">Engenheiro da Obra (Consultor)</option>
-                <option value="financeiro">Financeiro (Consultor)</option>
-                <option value="ggo">GGO / Diretor (Consultor)</option>
-              </select>
-            </div>
             <div id="role-badge-container">
               <span class="profile-badge adm" id="role-badge">ADM Obra</span>
             </div>

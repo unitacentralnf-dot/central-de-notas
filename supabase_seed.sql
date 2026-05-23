@@ -10,6 +10,7 @@
 -- TRUNCATE TABLE contas_fixas CASCADE;
 -- TRUNCATE TABLE notas_fiscais CASCADE;
 -- TRUNCATE TABLE protestos CASCADE;
+-- TRUNCATE TABLE usuarios CASCADE;
 -- TRUNCATE TABLE obras CASCADE;
 
 -- 2. Inserindo Obras (3 empreendimentos principais com colunas corretas do schema)
@@ -37,22 +38,30 @@ INSERT INTO public.contas_fixas (id, obra_id, nome, tipo, dia_vencimento, valor_
 ('e555e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e5', 'd377e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a3', 'Enel Distribuição', 'Energia', 10, 45000.00)
 ON CONFLICT (id) DO NOTHING;
 
--- 5. Inserindo Faturas Históricas (Com ID UUID válidos da conta fixa)
--- Janeiro a Abril (Pagos) e Maio (Pendente) para a rule-1 (Enel Bella Vista)
+-- 5. Inserindo Faturas Históricas (Totalmente compatíveis com as colunas e os status do Kanban da UI)
+-- rule-1: Enel Bella Vista (Janeiro a Abril Pago, Maio em 'nao_chegou' para coluna 1 do Kanban)
 INSERT INTO public.faturas (conta_fixa_id, mes_referencia, valor, data_vencimento, status) VALUES
 ('e111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e1', '2026-01', 14200.50, '2026-01-10', 'Pago'),
 ('e111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e1', '2026-02', 14850.00, '2026-02-10', 'Pago'),
 ('e111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e1', '2026-03', 15100.20, '2026-03-10', 'Pago'),
 ('e111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e1', '2026-04', 16050.00, '2026-04-10', 'Pago'),
-('e111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e1', '2026-05', 15800.75, '2026-05-10', 'Pendente');
+('e111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e1', '2026-05', 15800.75, '2026-05-10', 'nao_chegou');
 
--- Janeiro a Abril (Pagos) e Maio (Pendente) para a rule-2 (Sabesp Bella Vista)
+-- rule-2: Sabesp Bella Vista (Janeiro a Abril Pago, Maio em 'nao_chegou' para coluna 1 do Kanban)
 INSERT INTO public.faturas (conta_fixa_id, mes_referencia, valor, data_vencimento, status) VALUES
 ('e222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e2', '2026-01', 8100.00, '2026-01-15', 'Pago'),
 ('e222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e2', '2026-02', 8250.00, '2026-02-15', 'Pago'),
 ('e222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e2', '2026-03', 8900.00, '2026-03-15', 'Pago'),
 ('e222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e2', '2026-04', 8600.00, '2026-04-15', 'Pago'),
-('e222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e2', '2026-05', 9150.00, '2026-05-15', 'Pendente');
+('e222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e2', '2026-05', 9150.00, '2026-05-15', 'nao_chegou');
+
+-- rule-3: Vivo Bella Vista (Maio em 'recebida' para a coluna 2 do Kanban)
+INSERT INTO public.faturas (conta_fixa_id, mes_referencia, valor, data_vencimento, status) VALUES
+('e333e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e3', '2026-05', 950.00, '2026-05-20', 'recebida');
+
+-- rule-4: CPFL Parque do Sol (Maio em 'lancada' para a coluna 3 do Kanban)
+INSERT INTO public.faturas (conta_fixa_id, mes_referencia, valor, data_vencimento, status) VALUES
+('e444e8d3-5b8d-4e29-a1b7-a3f8c8d8b9e4', '2026-05', 21500.00, '2026-05-12', 'lancada');
 
 -- 6. Inserindo Boletos DDA (Com colunas corretas do schema e relacionamentos reais)
 INSERT INTO public.boletos_dda (obra_id, emissor_nome, emissor_cnpj, valor, data_vencimento, linha_digitavel, status_dda, nfe_vinculada_id) VALUES
@@ -67,3 +76,11 @@ INSERT INTO public.protestos (obra_id, cartorio, valor, data_protesto, status, c
 ('b199e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1', '1º Cartório de Protesto de São Paulo', 1250.00, '2026-05-02', 'Ativo', 'Tubos e Conexões Tigre S.A'),
 ('b199e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a1', '3º Cartório de Protesto de São Paulo', 4500.00, '2026-04-18', 'Regularizado', 'Metalúrgica Gerdau S.A'),
 ('c288e8d3-5b8d-4e29-a1b7-a3f8c8d8b9a2', 'Cartório de Registro de Protestos de Campinas', 8900.00, '2026-05-12', 'Ativo', 'Cimento Cauê S.A');
+
+-- 8. Inserindo Usuários Master do Sistema
+INSERT INTO public.usuarios (id, nome, email, senha, role, avatar_iniciais) VALUES
+('u111e8d3-5b8d-4e29-a1b7-a3f8c8d8b9u1', 'Carlos Silva', 'master@unita.com.br', 'masterunita2026', 'adm', 'CS'),
+('u222e8d3-5b8d-4e29-a1b7-a3f8c8d8b9u2', 'Eng. Roberto Dias', 'roberto@unita.com.br', 'robertounita2026', 'engenheiro', 'RD'),
+('u333e8d3-5b8d-4e29-a1b7-a3f8c8d8b9u3', 'Mariana Lins', 'mariana@unita.com.br', 'marianaunita2026', 'financeiro', 'ML'),
+('u444e8d3-5b8d-4e29-a1b7-a3f8c8d8b9u4', 'Arthur Albuquerque', 'arthur@unita.com.br', 'arthurunita2026', 'ggo', 'AA')
+ON CONFLICT (id) DO NOTHING;

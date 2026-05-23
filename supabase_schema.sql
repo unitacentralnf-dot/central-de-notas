@@ -1,5 +1,16 @@
 -- Script de inicialização do Supabase
 
+-- Criação da tabela de Usuários do Sistema
+CREATE TABLE IF NOT EXISTS public.usuarios (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    nome VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    senha VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL, -- adm, engenheiro, financeiro, ggo
+    avatar_iniciais VARCHAR(10) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Criação da tabela de Obras
 CREATE TABLE IF NOT EXISTS public.obras (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -79,6 +90,7 @@ ALTER TABLE public.faturas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.protestos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.notas_fiscais ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.boletos_dda ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 
 -- Políticas temporárias para permitir acesso total anônimo (só para testes iniciais)
 DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.obras;
@@ -98,3 +110,6 @@ CREATE POLICY "Permitir leitura anonima" ON public.notas_fiscais FOR SELECT USIN
 
 DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.boletos_dda;
 CREATE POLICY "Permitir leitura anonima" ON public.boletos_dda FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.usuarios;
+CREATE POLICY "Permitir leitura anonima" ON public.usuarios FOR SELECT USING (true);

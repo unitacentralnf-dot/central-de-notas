@@ -1,5 +1,5 @@
 import './style.css';
-import { initializeData, getObras } from './services/dataService.js';
+import { initializeData, getObras, loginUser } from './services/dataService.js';
 import { renderDashboard } from './components/Dashboard.js';
 import { renderNFe } from './components/NFe.js';
 import { renderFixedBills } from './components/FixedBills.js';
@@ -7,37 +7,10 @@ import { renderProtests } from './components/Protests.js';
 import { renderDDA } from './components/DDA.js';
 
 // Estado da Aplicação na Sessão
-let currentView = 'dashboard'; // 'dashboard', 'nfe', 'fixed-bills', 'protests'
-let currentRole = 'adm'; // 'adm', 'engenheiro', 'financeiro', 'ggo'
-let currentObraId = ''; // Seleção global da obra ativa
-
-// Dados dos Perfis de Simulação
-const userProfiles = {
-  'adm': {
-    name: 'Carlos Silva',
-    role: 'Administrador de Obra',
-    initials: 'CS',
-    welcome: 'Olá, Carlos! Bem-vindo de volta.'
-  },
-  'engenheiro': {
-    name: 'Eng. Roberto Dias',
-    role: 'Engenheiro Residente',
-    initials: 'RD',
-    welcome: 'Olá, Roberto! Tenha um bom dia de trabalho.'
-  },
-  'financeiro': {
-    name: 'Mariana Lins',
-    role: 'Controladora Financeira',
-    initials: 'ML',
-    welcome: 'Olá, Mariana! Tudo pronto para as análises.'
-  },
-  'ggo': {
-    name: 'Arthur Albuquerque',
-    role: 'Diretor de Operações',
-    initials: 'AA',
-    welcome: 'Seja bem-vindo, Diretor Arthur.'
-  }
-};
+let currentView = 'dashboard'; 
+let currentRole = 'adm'; 
+let currentObraId = ''; 
+let currentUser = null; // Usuário logado de verdade
 
 // Inicializar dados de teste
 initializeData();
@@ -45,7 +18,6 @@ initializeData();
 // Elementos do DOM
 const contentContainer = document.getElementById('content-container');
 const viewTitle = document.getElementById('view-title');
-const profileSelect = document.getElementById('profileSelect');
 const roleBadge = document.getElementById('role-badge');
 const roleBadgeContainer = document.getElementById('role-badge-container');
 const globalObraSelect = document.getElementById('globalObraSelect');
@@ -70,27 +42,113 @@ const viewTitles = {
 
 // Inicialização Geral
 async function init() {
-  // Carregar última obra ativa do cache
+  setupLoginEvents();
+
+  // Verificar se há sessão ativa
+  const cachedUser = sessionStorage.getItem('current_user');
+  if (cachedUser) {
+    currentUser = JSON.parse(cachedUser);
+    currentRole = currentUser.role;
+    
+    // Esconde tela de login e revela app
+    document.getElementById('login-screen').classList.remove('active');
+    document.getElementById('app').style.display = 'flex';
+    
+    await startApp();
+  } else {
+    // Revela tela de login e esconde app
+    document.getElementById('login-screen').classList.add('active');
+    document.getElementById('app').style.display = 'none';
+  }
+}
+
+// Inicializa a aplicação de verdade após autenticado
+async function startApp() {
   const obras = await getObras();
   if (obras && obras.length > 0) {
     const savedObraId = localStorage.getItem('active_obra_id');
     currentObraId = (savedObraId && obras.some(o => o.id === savedObraId)) ? savedObraId : obras[0].id;
   }
 
-  // Carregar último perfil do cache se houver
-  const savedRole = localStorage.getItem('active_role');
-  if (savedRole) {
-    currentRole = savedRole;
-    if (profileSelect) profileSelect.value = savedRole;
-  }
-
   updateRoleUI();
   setupNavigation();
-  setupRoleSelector();
   await setupObraSelector();
+  setupLogoutEvent();
   
-  // Renderizar view inicial
   await navigateTo(currentView);
+}
+
+// Configura os eventos da tela de login e cartões de demonstração
+function setupLoginEvents() {
+  const loginForm = document.getElementById('login-form');
+  const errorMsg = document.getElementById('login-error-msg');
+
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const pass = document.getElementById('login-password').value;
+      if (errorMsg) errorMsg.style.display = 'none';
+
+      const user = await loginUser(email, pass);
+      if (user) {
+        currentUser = user;
+        currentRole = user.role;
+        sessionStorage.setItem('current_user', JSON.stringify(user));
+        
+        // Esconde login e revela app
+        document.getElementById('login-screen').classList.remove('active');
+        document.getElementById('app').style.display = 'flex';
+        
+        await startApp();
+      } else {
+        if (errorMsg) errorMsg.style.display = 'block';
+      }
+    });
+  }
+
+  // Evento dos cards de demonstração (um clique)
+  document.querySelectorAll('.demo-user-card').forEach(card => {
+    card.addEventListener('click', (e) => {
+      const email = e.currentTarget.getAttribute('data-email');
+      const pass = e.currentTarget.getAttribute('data-pass');
+      
+      const emailInput = document.getElementById('login-email');
+      const passInput = document.getElementById('login-password');
+      
+      if (emailInput) emailInput.value = email;
+      if (passInput) passInput.value = pass;
+      
+      // Submit automático
+      if (loginForm) {
+        loginForm.requestSubmit();
+      }
+    });
+  });
+}
+
+// Configura o evento de logout
+function setupLogoutEvent() {
+  const btnLogout = document.getElementById('btn-logout-sidebar');
+  if (btnLogout) {
+    btnLogout.addEventListener('click', () => {
+      sessionStorage.removeItem('current_user');
+      currentUser = null;
+      
+      // Limpa os inputs de login
+      const emailInput = document.getElementById('login-email');
+      const passInput = document.getElementById('login-password');
+      if (emailInput) emailInput.value = '';
+      if (passInput) passInput.value = '';
+      
+      const errorMsg = document.getElementById('login-error-msg');
+      if (errorMsg) errorMsg.style.display = 'none';
+
+      // Esconde app e revela login
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('login-screen').classList.add('active');
+    });
+  }
 }
 
 // Configurar o seletor de obra global
@@ -132,21 +190,6 @@ function setupNavigation() {
   });
 }
 
-// Configurar Eventos do Seletor de Perfis
-function setupRoleSelector() {
-  if (profileSelect) {
-    profileSelect.addEventListener('change', async (e) => {
-      currentRole = e.target.value;
-      localStorage.setItem('active_role', currentRole);
-      
-      updateRoleUI();
-      
-      // Re-renderiza a tela ativa com as novas permissões do perfil
-      await renderActiveView();
-    });
-  }
-}
-
 // Atualiza o visual do Badge do Cargo/Perfil
 function updateRoleUI() {
   if (!roleBadge || !roleBadgeContainer) return;
@@ -169,17 +212,22 @@ function updateRoleUI() {
   }
 
   // Atualiza painel do usuário e saudação dinâmica
-  const profile = userProfiles[currentRole];
-  if (profile) {
+  if (currentUser) {
     const sidebarAvatar = document.getElementById('sidebar-user-avatar');
     const sidebarName = document.getElementById('sidebar-user-name');
     const sidebarRole = document.getElementById('sidebar-user-role');
     const welcomeMsg = document.getElementById('welcome-message');
 
-    if (sidebarAvatar) sidebarAvatar.textContent = profile.initials;
-    if (sidebarName) sidebarName.textContent = profile.name;
-    if (sidebarRole) sidebarRole.textContent = profile.role;
-    if (welcomeMsg) welcomeMsg.textContent = profile.welcome;
+    let displayRoleName = 'Consultor';
+    if (currentRole === 'adm') displayRoleName = 'Administrador de Obra';
+    if (currentRole === 'engenheiro') displayRoleName = 'Engenheiro Residente';
+    if (currentRole === 'financeiro') displayRoleName = 'Controladora Financeira';
+    if (currentRole === 'ggo') displayRoleName = 'Diretor de Operações';
+
+    if (sidebarAvatar) sidebarAvatar.textContent = currentUser.initials;
+    if (sidebarName) sidebarName.textContent = currentUser.name;
+    if (sidebarRole) sidebarRole.textContent = displayRoleName;
+    if (welcomeMsg) welcomeMsg.textContent = currentUser.welcome;
   }
 }
 

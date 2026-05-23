@@ -13,15 +13,18 @@ export async function getObras() {
     console.error('Erro ao buscar obras:', error);
     return [];
   }
-  // Mapear campos snake_case para camelCase esperado pela UI
+  
+  // Buscar protestos ativos para definir o protestStatus das obras dinamicamente
+  const { data: protestosData } = await supabase.from('protestos').select('obra_id').eq('status', 'Ativo');
+  const obrasComProtestos = new Set((protestosData || []).map(p => p.obra_id));
+
   return data.map(o => ({
     id: o.id,
     name: o.nome,
     cnpj: o.cnpj,
     address: o.endereco,
-    // Como a tabela obras base não tem protestStatus e lastProtestCheck, definiremos valores default para UI não quebrar
-    protestStatus: 'clean', 
-    lastProtestCheck: null
+    protestStatus: obrasComProtestos.has(o.id) ? 'dirty' : 'clean', 
+    lastProtestCheck: o.created_at
   }));
 }
 
@@ -275,4 +278,63 @@ export function initializeData() {
 export function addNotification(type, message) {
   console.log(`[Notification - ${type}] ${message}`);
   // Pode ser implementado posteriormente no UI
+}
+
+// --- MÓDULO PROTESTOS REAIS ---
+export async function getProtestsByObra(obraId) {
+  if (!obraId) return [];
+  const { data, error } = await supabase.from('protestos').select('*').eq('obra_id', obraId);
+  if (error) {
+    console.error('Erro ao buscar protestos:', error);
+    return [];
+  }
+  return data.map(p => ({
+    id: p.id,
+    obraId: p.obra_id,
+    creditor: p.credor,
+    value: parseFloat(p.valor),
+    date: p.data_protesto,
+    notary: p.cartorio,
+    status: p.status,
+    reason: 'Duplicata de Venda Mercantil não Paga'
+  }));
+}
+
+export async function resolveProtestsForObra(obraId) {
+  if (!obraId) return false;
+  const { error } = await supabase
+    .from('protestos')
+    .update({ status: 'Regularizado' })
+    .eq('obra_id', obraId)
+    .eq('status', 'Ativo');
+    
+  if (error) {
+    console.error('Erro ao regularizar protestos no Supabase:', error);
+    return false;
+  }
+  return true;
+}
+
+// --- MÓDULO AUTENTICAÇÃO REAL ---
+export async function loginUser(email, senha) {
+  if (!email || !senha) return null;
+  const { data, error } = await supabase
+    .from('usuarios')
+    .select('*')
+    .eq('email', email)
+    .eq('senha', senha)
+    .single();
+    
+  if (error || !data) {
+    console.error('Erro de autenticação no Supabase:', error);
+    return null;
+  }
+  return {
+    id: data.id,
+    name: data.nome,
+    email: data.email,
+    role: data.role,
+    initials: data.avatar_iniciais,
+    welcome: `Olá, ${data.nome.split(' ')[0]}! Bem-vindo de volta.`
+  };
 }

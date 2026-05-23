@@ -1,4 +1,4 @@
-import { getObras, saveObra, addNotification } from '../services/dataService.js';
+import { getObras, saveObra, addNotification, getProtestsByObra, resolveProtestsForObra } from '../services/dataService.js';
 
 let activeObraId = '';
 let scanResult = null; 
@@ -13,12 +13,25 @@ export async function renderProtests(container, currentRole, initialObraId = '')
   const selectedObra = obras.find(o => o.id === activeObraId);
   const isAdm = currentRole === 'adm';
 
-  // Se já houver status, carrega o detalhe se for dirty
+  // Se já houver status, carrega o detalhe real do banco de dados Supabase
   let initialDetailsHtml = '';
   if (selectedObra) {
     if (selectedObra.protestStatus === 'dirty') {
-      // Gera detalhes mockados equivalentes aos do dataService
-      initialDetailsHtml = getProtestDetailsHtml(selectedObra.cnpj);
+      const realProtests = await getProtestsByObra(activeObraId);
+      const activeProtests = realProtests.filter(p => p.status === 'Ativo');
+      initialDetailsHtml = activeProtests.map(p => `
+        <div style="background-color: hsl(var(--bg-input)); border: 1px solid var(--border-light); padding: 16px; border-radius: var(--radius-sm); font-size: 0.85rem; line-height: 1.4;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 600; color: white;">
+            <span>Credor: ${p.creditor}</span>
+            <span style="color: hsl(var(--color-danger));">${p.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+          </div>
+          <div style="color: hsl(var(--text-muted)); font-size: 0.8rem;">
+            <div>Cartório: <strong>${p.notary}</strong></div>
+            <div>Data Protesto: <strong>${new Date(p.date).toLocaleDateString('pt-BR')}</strong></div>
+            <div>Status Cadastral: <strong style="color: hsl(var(--color-danger));">${p.status}</strong></div>
+          </div>
+        </div>
+      `).join('');
     }
   }
 
@@ -136,13 +149,13 @@ function bindDirtyFormEvents(container, currentRole) {
         return;
       }
       
-      const obras = await getObras();
-      const selectedObra = obras.find(o => o.id === activeObraId);
-      if (selectedObra) {
-        selectedObra.protestStatus = 'clean';
-        await saveObra(selectedObra);
-        alert('Comprovante enviado com sucesso! O status do CNPJ foi atualizado para REGULAR.');
+      const success = await resolveProtestsForObra(activeObraId);
+      if (success) {
+        addNotification('success', `LOG: Anuência anexada e restrições limpas no Supabase para a Obra selecionada.`);
+        alert('Comprovante enviado com sucesso! O status do CNPJ foi atualizado para REGULAR no banco de dados do Supabase.');
         await renderProtests(container, currentRole, activeObraId);
+      } else {
+        alert('Ocorreu um erro ao tentar limpar as restrições no banco.');
       }
     });
   }
