@@ -384,7 +384,8 @@ export async function mockCreateUsuario({ nome, email, senha, role, obraId }) {
     insertData.senha = senha; // fallback: salva senha em texto puro
   }
 
-  const { data, error } = await supabase.from('usuarios').insert([insertData]).select();
+  const db = supabaseAdmin || supabase;
+  const { data, error } = await db.from('usuarios').insert([insertData]).select();
   if (error) throw error;
   return data[0];
 }
