@@ -4,6 +4,13 @@ let activeObraId = '';
 let scanResult = null; 
 
 export async function renderProtests(container, currentRole, initialObraId = '') {
+  container.innerHTML = `
+    <div class="shimmer-container">
+      <div class="shimmer-card header-shimmer" style="width: 250px;"></div>
+      <div class="shimmer-card shimmer-table"></div>
+    </div>
+  `;
+
   if (initialObraId) activeObraId = initialObraId;
   const obras = await getObras();
   if (!activeObraId && obras.length > 0) {

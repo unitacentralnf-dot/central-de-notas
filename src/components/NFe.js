@@ -1,6 +1,13 @@
 import { getObras, getNFesByObra, syncSefaz, manifestNFe, launchNFe } from '../services/dataService.js';
 
 export async function renderNFe(container, currentRole, activeObraId) {
+  container.innerHTML = `
+    <div class="shimmer-container">
+      <div class="shimmer-card header-shimmer" style="width: 250px;"></div>
+      <div class="shimmer-card shimmer-table"></div>
+    </div>
+  `;
+
   const obras = await getObras();
   if (!activeObraId && obras.length > 0) {
     activeObraId = obras[0].id;

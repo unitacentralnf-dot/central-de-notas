@@ -9,13 +9,13 @@ export async function getDDABills(obraId = null) {
   if (obraId) {
     query = query.eq('obra_id', obraId);
   }
-  
+
   const { data, error } = await query;
   if (error) {
     console.error('Erro ao buscar boletos DDA:', error);
     return [];
   }
-  
+
   return data.map(b => ({
     id: b.id,
     obraId: b.obra_id,
@@ -35,7 +35,7 @@ export async function linkDDAToNFe(ddaId, nfeId) {
     status_dda: 'vinculado_nfe',
     nfe_vinculada_id: nfeId
   }).eq('id', ddaId);
-  
+
   if (error) {
     console.error('Erro ao vincular DDA a NFe:', error);
     return false;
@@ -48,7 +48,7 @@ export async function linkDDAToFixedBill(ddaId, ruleId) {
     status_dda: 'vinculado_conta_fixa',
     conta_fixa_vinculada_id: ruleId
   }).eq('id', ddaId);
-  
+
   if (error) {
     console.error('Erro ao vincular DDA a Conta Fixa:', error);
     return false;
@@ -56,7 +56,6 @@ export async function linkDDAToFixedBill(ddaId, ruleId) {
   return true;
 }
 
-// Simula a busca de novos boletos no BaaS e insere direto no Supabase
 export async function syncDDABaaS(obraId) {
   return new Promise(resolve => {
     setTimeout(async () => {
@@ -65,11 +64,11 @@ export async function syncDDABaaS(obraId) {
         emissor_nome: 'FORNECEDOR DDA SYNC S/A',
         emissor_cnpj: '99.888.777/0001-66',
         valor: parseFloat((Math.random() * 5000 + 500).toFixed(2)),
-        data_vencimento: new Date(Date.now() + 86400000 * 15).toISOString().split('T')[0], // Daqui 15 dias
+        data_vencimento: new Date(Date.now() + 86400000 * 15).toISOString().split('T')[0],
         linha_digitavel: '23793.38128 60000.000000 93000.000000 1 89450000' + Math.floor(Math.random()*10000),
         status_dda: 'Pendente'
       };
-      
+
       const { data, error } = await supabase.from('boletos_dda').insert([novoBoleto]).select();
       if (error) {
         console.error('Erro ao sync DDA:', error);

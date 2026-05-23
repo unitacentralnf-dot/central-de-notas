@@ -3,13 +3,26 @@ import {
   getHistoricalData, simulateOCR, dispatchManualAlert, addNotification 
 } from '../services/dataService.js';
 
-let activeTab = 'monthly'; // 'monthly' ou 'rules'
-let activeMes = '05'; // Maio fixado para o protótipo
-let activeAno = '2026';
+let activeTab = 'monthly';
+let activeMes = '';
+let activeAno = '';
 let selectedHistoryRuleId = '';
 
+function getDefaultMes() { return activeMes || String(new Date().getMonth() + 1).padStart(2, '0'); }
+function getDefaultAno() { return activeAno || String(new Date().getFullYear()); }
+
 export async function renderFixedBills(container, currentRole, activeObraId) {
-  // Inicializa filtro de obra com o valor temporário se houver (vindo do clique no dashboard)
+  container.innerHTML = `
+    <div class="shimmer-container">
+      <div class="shimmer-card header-shimmer"></div>
+      <div class="shimmer-grid">
+        <div class="shimmer-card"></div>
+        <div class="shimmer-card"></div>
+        <div class="shimmer-card"></div>
+      </div>
+    </div>
+  `;
+
   const tempFilter = localStorage.getItem('temp_filter_obra');
   if (tempFilter) {
     activeObraId = tempFilter;
@@ -72,10 +85,27 @@ async function renderActiveTabContent(currentRole, activeObraId) {
 async function renderMonthlyView(container, currentRole, activeObraId) {
   const obras = await getObras();
   const selectedObra = obras.find(o => o.id === activeObraId);
-  const bills = await getBillsForPeriod(activeMes, activeAno, activeObraId);
+  const mes = getDefaultMes();
+  const ano = getDefaultAno();
+  const hoje = new Date();
+  const hojeDia = hoje.getDate();
+  const bills = await getBillsForPeriod(mes, ano, activeObraId);
   const rules = await getRules();
 
   const fmt = (v) => v ? v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00';
+
+  function mesOptions() {
+    const opts = [];
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() + i, 1);
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const a = String(d.getFullYear());
+      const label = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      const selected = m === mes && a === ano;
+      opts.push(`<option value="${m}/${a}" ${selected ? 'selected' : ''}>${label}</option>`);
+    }
+    return opts.join('');
+  }
 
   // Separar faturas por colunas do Kanban
   const colNaoChegou = bills.filter(b => b.status === 'nao_chegou');
@@ -97,8 +127,7 @@ async function renderMonthlyView(container, currentRole, activeObraId) {
       <div class="filter-item">
         <label class="form-label" style="font-size: 0.75rem;">Mês/Ano Referência</label>
         <select id="filter-period" class="filter-select" aria-label="Filtrar por período">
-          <option value="05/2026" ${activeMes === '05' && activeAno === '2026' ? 'selected' : ''}>Maio / 2026</option>
-          <option value="06/2026" ${activeMes === '06' && activeAno === '2026' ? 'selected' : ''}>Junho / 2026</option>
+          ${mesOptions()}
         </select>
       </div>
     </div>
@@ -150,9 +179,8 @@ async function renderMonthlyView(container, currentRole, activeObraId) {
             if (!rule) return '';
             const obra = obras.find(o => o.id === b.obraId);
             
-            // Lógica para aviso visual de cobrança (se passou do dia de vencimento menos a tolerância)
             const dueDay = b.vencimentoPadrao;
-            const isVencida = dueDay < 23; // Hoje simulado como dia 23
+            const isVencida = dueDay < hojeDia;
 
             return `
               <div class="bill-card card-actionable" data-id="${b.id}" data-action="upload">
@@ -639,7 +667,9 @@ async function openUploadModal(billId, currentRole, activeObraId, viewContainer)
   const modalBody = document.getElementById('modal-body');
   const modalFooter = document.getElementById('modal-footer');
   
-  const bills = await getBillsForPeriod(activeMes, activeAno, activeObraId);
+  const mes = getDefaultMes();
+  const ano = getDefaultAno();
+  const bills = await getBillsForPeriod(mes, ano, activeObraId);
   const bill = bills.find(b => b.id === billId);
   const rules = await getRules();
   const rule = rules.find(r => r.id === bill.ruleId);
@@ -656,7 +686,7 @@ async function openUploadModal(billId, currentRole, activeObraId, viewContainer)
       <div style="display: flex; flex-direction: column; gap: 16px;">
         <div style="background-color: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); padding: 16px; border-radius: var(--radius-md); text-align: center; color: hsl(var(--color-danger));">
           <strong>Fatura Pendente de Lançamento</strong><br>
-          Esta fatura de <strong>${rule.name}</strong> para o mês de ${activeMes}/${activeAno} ainda não foi anexada pelo ADM da Obra.
+          Esta fatura de <strong>${rule.name}</strong> para o mês de ${mes}/${ano} ainda não foi anexada pelo ADM da Obra.
         </div>
         
         <table class="table-premium" style="margin-top: 10px;" aria-label="Detalhes da fatura pendente">
@@ -836,7 +866,7 @@ async function openUploadModal(billId, currentRole, activeObraId, viewContainer)
     
     // Logar atividade
     const isAnomaly = bill.valorReal > (bill.valorEstimado * 1.2);
-    let logMsg = `LOG: Fatura de [${rule.name}] de Maio/2026 enviada pelo ADM da Obra. Valor Real: R$ ${bill.valorReal.toFixed(2)}.`;
+    let logMsg = `LOG: Fatura de [${rule.name}] de ${mes}/${ano} enviada pelo ADM da Obra. Valor Real: R$ ${bill.valorReal.toFixed(2)}.`;
     if (isAnomaly) {
       logMsg += ` ⚠️ ALERTA: Desvio de custo na obra de +${Math.round(((bill.valorReal - bill.valorEstimado)/bill.valorEstimado)*100)}%!`;
       // addNotification('warning', logMsg);
@@ -856,7 +886,9 @@ async function openProcessModal(billId, currentRole, activeObraId, viewContainer
   const modalBody = document.getElementById('modal-body');
   const modalFooter = document.getElementById('modal-footer');
   
-  const bills = await getBillsForPeriod(activeMes, activeAno, activeObraId);
+  const mes = getDefaultMes();
+  const ano = getDefaultAno();
+  const bills = await getBillsForPeriod(mes, ano, activeObraId);
   const bill = bills.find(b => b.id === billId);
   const rules = await getRules();
   const rule = rules.find(r => r.id === bill.ruleId);
@@ -998,10 +1030,10 @@ async function openProcessModal(billId, currentRole, activeObraId, viewContainer
     if (status === 'lancada') {
       const lote = document.getElementById('bill-lote-input').value;
       bill.comprovante = `lote_erp_${lote}.txt`;
-      addNotification('success', `LOG: Fatura de [${rule.name}] de Maio/2026 marcada como LANÇADA pelo ADM. Nº Lote ERP: ${lote}.`);
+      addNotification('success', `LOG: Fatura de [${rule.name}] de ${getDefaultMes()}/${getDefaultAno()} marcada como LANÇADA pelo ADM. Nº Lote ERP: ${lote}.`);
     } else {
       bill.comprovante = `comprovante_pagamento_maio.pdf`;
-      addNotification('success', `LOG: Fatura de [${rule.name}] de Maio/2026 marcada como LIQUIDADA pelo ADM. Comprovante anexado.`);
+      addNotification('success', `LOG: Fatura de [${rule.name}] de ${getDefaultMes()}/${getDefaultAno()} marcada como LIQUIDADA pelo ADM. Comprovante anexado.`);
     }
 
     await saveBill(bill);
@@ -1017,7 +1049,7 @@ async function openViewOnlyModal(billId) {
   const modalBody = document.getElementById('modal-body');
   const modalFooter = document.getElementById('modal-footer');
   
-  const bills = await getBillsForPeriod(activeMes, activeAno, null); // view global de leitura
+  const bills = await getBillsForPeriod(getDefaultMes(), getDefaultAno(), null);
   const bill = bills.find(b => b.id === billId);
   const rules = await getRules();
   const rule = rules.find(r => r.id === bill.ruleId);

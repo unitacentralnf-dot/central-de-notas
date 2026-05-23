@@ -319,41 +319,13 @@ async function navigateTo(view) {
 async function renderActiveView() {
   if (!contentContainer) return;
 
-  // 1. Fade out: adiciona classe view-exit e remove view-enter
+  // Fade out: esconde o conteudo atual suavemente
   contentContainer.classList.add('view-exit');
   contentContainer.classList.remove('view-enter');
-
-  // Aguarda a transição de fade-out (120ms)
   await new Promise(r => setTimeout(r, 120));
 
-  // 2. Injeta o Skeleton Shimmer correspondente à view
-  let shimmerHtml = `
-    <div class="shimmer-container">
-      <div class="shimmer-card header-shimmer"></div>
-      <div class="shimmer-grid">
-        <div class="shimmer-card"></div>
-        <div class="shimmer-card"></div>
-        <div class="shimmer-card"></div>
-      </div>
-    </div>
-  `;
-  
-  if (currentView === 'nfe' || currentView === 'dda' || currentView === 'master') {
-    shimmerHtml = `
-      <div class="shimmer-container">
-        <div class="shimmer-card header-shimmer" style="width: 250px;"></div>
-        <div class="shimmer-card shimmer-table"></div>
-      </div>
-    `;
-  }
-  
-  contentContainer.innerHTML = shimmerHtml;
-  
-  // Revela o shimmer com fade-in suave
-  contentContainer.classList.remove('view-exit');
-  contentContainer.classList.add('view-enter');
-
-  // 3. Renderiza o conteúdo real
+  // Renderiza a view — cada componente ja mostra shimmer antes de carregar dados
+  // Toda manipulacao de DOM ocorre enquanto opacity: 0, sem piscadas
   if (currentView === 'dashboard') {
     await renderDashboard(contentContainer, currentRole, currentObraId);
   } else if (currentView === 'dda') {
@@ -368,7 +340,7 @@ async function renderActiveView() {
     await renderMaster(contentContainer, currentUser);
   }
 
-  // 4. Revela a view carregada
+  // Fade in: revela o conteudo ja renderizado
   contentContainer.classList.remove('view-exit');
   contentContainer.classList.add('view-enter');
 }

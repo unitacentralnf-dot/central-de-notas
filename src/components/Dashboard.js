@@ -2,13 +2,24 @@ import { getObras, getBillsForPeriod, getNotifications, getRules, dispatchManual
 import { setGlobalObra, navigateToView } from '../main.js';
 
 export async function renderDashboard(container, currentRole, activeObraId) {
-  // Executar a verificação de alertas
+  container.innerHTML = `
+    <div class="shimmer-container">
+      <div class="shimmer-card header-shimmer"></div>
+      <div class="shimmer-grid">
+        <div class="shimmer-card"></div>
+        <div class="shimmer-card"></div>
+        <div class="shimmer-card"></div>
+      </div>
+    </div>
+  `;
+
   await runCronCheckAlerts();
 
   const obras = await getObras();
   const hoje = new Date();
-  const mesStr = '05'; // Maio fixado para o protótipo
-  const anoStr = '2026';
+  const mesStr = String(hoje.getMonth() + 1).padStart(2, '0');
+  const anoStr = String(hoje.getFullYear());
+  const hojeDia = hoje.getDate();
   
   const bills = await getBillsForPeriod(mesStr, anoStr);
   const notifications = await getNotifications();
@@ -23,7 +34,7 @@ export async function renderDashboard(container, currentRole, activeObraId) {
   const faturasVencidas = bills.filter(b => {
     if (b.status === 'paga' || b.status === 'lancada') return false;
     const dueDay = b.vencimentoPadrao;
-    return dueDay < 23; // Hoje simulado como dia 23
+    return dueDay < hojeDia;
   }).length;
 
   // Custo Real + Estimado das que já foram lançadas/pagas
@@ -68,7 +79,7 @@ export async function renderDashboard(container, currentRole, activeObraId) {
         <!-- Card 2: Contas Pendentes -->
         <div class="card-premium ${faturasVencidas > 0 ? 'danger' : (faturasPendentes > 0 ? 'warning' : 'success')}" id="card-faturas" style="cursor: pointer;">
           <div class="card-header">
-            <span class="card-title">Faturas Pendentes (Maio/26)</span>
+            <span class="card-title">Faturas Pendentes (${mesStr}/${anoStr.substring(2)})</span>
             <div class="card-icon ${faturasVencidas > 0 ? 'danger' : (faturasPendentes > 0 ? 'warning' : 'success')}">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -103,7 +114,7 @@ export async function renderDashboard(container, currentRole, activeObraId) {
         <!-- Coluna Esquerda: Obras Cadastradas -->
         <div class="section-panel" style="margin-bottom: 0;">
           <div class="panel-header">
-            <h2 class="panel-title">Acompanhamento por Obra (Maio/2026)</h2>
+            <h2 class="panel-title">Acompanhamento por Obra (${mesStr}/${anoStr})</h2>
           </div>
           
           <div class="table-responsive">

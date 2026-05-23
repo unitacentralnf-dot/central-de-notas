@@ -84,7 +84,7 @@ CREATE TABLE IF NOT EXISTS public.boletos_dda (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Configurando RLS (Row Level Security) - Pode ser ajustado conforme a necessidade
+-- Configurando RLS (Row Level Security)
 ALTER TABLE public.obras ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.contas_fixas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.faturas ENABLE ROW LEVEL SECURITY;
@@ -93,7 +93,9 @@ ALTER TABLE public.notas_fiscais ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.boletos_dda ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 
--- Políticas temporárias para permitir acesso total anônimo (só para testes iniciais)
+-- ⚠️ POLÍTICAS TEMPORÁRIAS (TESTES/DESENVOLVIMENTO)
+-- Permitem acesso anônimo total. REMOVA em produção e use as políticas
+-- comentadas abaixo com Supabase Auth.
 DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.obras;
 CREATE POLICY "Permitir leitura anonima" ON public.obras FOR SELECT USING (true);
 
@@ -114,6 +116,77 @@ CREATE POLICY "Permitir leitura anonima" ON public.boletos_dda FOR SELECT USING 
 
 DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.usuarios;
 CREATE POLICY "Permitir leitura anonima" ON public.usuarios FOR SELECT USING (true);
+
+-- ======================================================================
+-- POLÍTICAS FUTURAS (ativa após migrar para Supabase Auth + hash senhas)
+-- ======================================================================
+-- 
+-- -- Helper: verifica se o usuário logado é master
+-- CREATE OR REPLACE FUNCTION public.is_master()
+-- RETURNS BOOLEAN AS $$
+--   SELECT EXISTS (
+--     SELECT 1 FROM public.usuarios
+--     WHERE id = auth.uid() AND role = 'master'
+--   );
+-- $$ LANGUAGE sql STABLE;
+-- 
+-- -- Helper: verifica se o usuário tem acesso à obra
+-- CREATE OR REPLACE FUNCTION public.has_obra_access(obra_id UUID)
+-- RETURNS BOOLEAN AS $$
+--   SELECT EXISTS (
+--     SELECT 1 FROM public.usuarios
+--     WHERE id = auth.uid()
+--       AND (obra_id IS NULL OR obra_id = has_obra_access.obra_id OR role = 'master' OR role = 'ggo')
+--   );
+-- $$ LANGUAGE sql STABLE;
+-- 
+-- -- OBRAS: todos autenticados leem, só master/adm escreve
+-- DROP POLICY IF EXISTS "obras_select" ON public.obras;
+-- CREATE POLICY "obras_select" ON public.obras FOR SELECT USING (auth.role() = 'authenticated');
+-- DROP POLICY IF EXISTS "obras_insert" ON public.obras;
+-- CREATE POLICY "obras_insert" ON public.obras FOR INSERT WITH CHECK (public.is_master());
+-- DROP POLICY IF EXISTS "obras_update" ON public.obras;
+-- CREATE POLICY "obras_update" ON public.obras FOR UPDATE USING (public.is_master());
+-- DROP POLICY IF EXISTS "obras_delete" ON public.obras;
+-- CREATE POLICY "obras_delete" ON public.obras FOR DELETE USING (public.is_master());
+-- 
+-- -- CONTAS_FIXAS: leitura para quem tem acesso à obra, escrita só master/adm
+-- DROP POLICY IF EXISTS "contas_fixas_select" ON public.contas_fixas;
+-- CREATE POLICY "contas_fixas_select" ON public.contas_fixas FOR SELECT USING (public.has_obra_access(obra_id));
+-- DROP POLICY IF EXISTS "contas_fixas_insert" ON public.contas_fixas;
+-- CREATE POLICY "contas_fixas_insert" ON public.contas_fixas FOR INSERT WITH CHECK (public.is_master());
+-- DROP POLICY IF EXISTS "contas_fixas_update" ON public.contas_fixas;
+-- CREATE POLICY "contas_fixas_update" ON public.contas_fixas FOR UPDATE USING (public.is_master());
+-- DROP POLICY IF EXISTS "contas_fixas_delete" ON public.contas_fixas;
+-- CREATE POLICY "contas_fixas_delete" ON public.contas_fixas FOR DELETE USING (public.is_master());
+-- 
+-- -- FATURAS: mesma regra de contas_fixas
+-- DROP POLICY IF EXISTS "faturas_select" ON public.faturas;
+-- CREATE POLICY "faturas_select" ON public.faturas FOR SELECT USING (
+--   EXISTS (SELECT 1 FROM public.contas_fixas cf WHERE cf.id = conta_fixa_id AND public.has_obra_access(cf.obra_id))
+-- );
+-- DROP POLICY IF EXISTS "faturas_insert" ON public.faturas;
+-- CREATE POLICY "faturas_insert" ON public.faturas FOR INSERT WITH CHECK (public.is_master());
+-- DROP POLICY IF EXISTS "faturas_update" ON public.faturas;
+-- CREATE POLICY "faturas_update" ON public.faturas FOR UPDATE USING (public.is_master());
+-- DROP POLICY IF EXISTS "faturas_delete" ON public.faturas;
+-- CREATE POLICY "faturas_delete" ON public.faturas FOR DELETE USING (public.is_master());
+-- 
+-- -- PROTESTOS, NOTAS_FISCAIS, BOLETOS_DDA: mesma lógica baseada em obra_id
+-- DROP POLICY IF EXISTS "protestos_select" ON public.protestos;
+-- CREATE POLICY "protestos_select" ON public.protestos FOR SELECT USING (public.has_obra_access(obra_id));
+-- DROP POLICY IF EXISTS "notas_fiscais_select" ON public.notas_fiscais;
+-- CREATE POLICY "notas_fiscais_select" ON public.notas_fiscais FOR SELECT USING (public.has_obra_access(obra_id));
+-- DROP POLICY IF EXISTS "boletos_dda_select" ON public.boletos_dda;
+-- CREATE POLICY "boletos_dda_select" ON public.boletos_dda FOR SELECT USING (public.has_obra_access(obra_id));
+-- 
+-- -- USUARIOS: cada um vê apenas seus próprios dados, master vê todos
+-- DROP POLICY IF EXISTS "usuarios_select" ON public.usuarios;
+-- CREATE POLICY "usuarios_select" ON public.usuarios FOR SELECT USING (
+--   id = auth.uid() OR public.is_master()
+-- );
+-- DROP POLICY IF EXISTS "usuarios_update" ON public.usuarios;
+-- CREATE POLICY "usuarios_update" ON public.usuarios FOR UPDATE USING (id = auth.uid() OR public.is_master());
 
 -- Criação da tabela de Solicitações de Acesso
 CREATE TABLE IF NOT EXISTS public.solicitacoes_acesso (

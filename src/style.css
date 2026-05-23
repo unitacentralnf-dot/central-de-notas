@@ -449,6 +449,10 @@ header.header {
   flex-grow: 1;
 }
 
+#content-container {
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 /* Grid de Cards do Dashboard */
 .summary-grid {
   display: grid;
@@ -1572,17 +1576,16 @@ table.table-premium tbody tr:last-child td {
   }
 }
 
-/* Transições Premium de View (Fim da Piscada) */
+/* Transições Premium de View */
 .view-enter {
-  opacity: 1 !important;
-  transform: translateY(0) !important;
-  transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .view-exit {
-  opacity: 0 !important;
-  transform: translateY(8px) !important;
-  transition: opacity 0.12s ease-in, transform 0.12s ease-in !important;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.12s ease-in, transform 0.12s ease-in;
 }
 
 /* Shimmer Skeletons */
