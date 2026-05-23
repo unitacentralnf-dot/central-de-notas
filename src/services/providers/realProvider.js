@@ -4,15 +4,14 @@ import {
   mockGetObras, mockSaveObra, mockDeleteObra,
   mockGetRules, mockSaveRule, mockDeleteRule,
   mockGetBills, mockSaveBill,
-  mockGetNFes, mockSyncSefaz, mockManifestNFe, mockLaunchNFe,
+  mockGetNFes, mockManifestNFe,
   mockGetNotifications, mockDispatchManualAlert, mockRunCronCheckAlerts,
-  mockSimulateOCR, mockGetHistoricalData,
+  mockGetHistoricalData,
   mockInitializeData, mockAddNotification,
   mockGetProtestsByObra, mockResolveProtestsForObra,
   mockLoginUser, mockSubmitAccessRequest,
   mockGetAccessRequests, mockUpdateAccessRequest,
   mockGetUsuarios, mockCreateUsuario, mockUpdateUsuario, mockDeleteUsuario,
-  mockCheckCnpjStatus,
 } from './mockProvider.js';
 
 // -------------------------------------------------------------------
@@ -45,7 +44,7 @@ export async function realCheckCnpjStatus(cnpj) {
         };
       }
       if (response.status === 429) {
-        console.warn('CNPJ.ws: Rate limit atingido. Usando fallback mock.');
+        console.warn('CNPJ.ws: Rate limit atingido (3 req/min). Tente novamente em alguns instantes.');
         throw new Error('Rate limit exceeded');
       }
       throw new Error(`CNPJ.ws HTTP ${response.status}`);
@@ -74,11 +73,6 @@ export async function realCheckCnpjStatus(cnpj) {
       protestStatus: data.situacao_cadastral === 'ATIVA' ? 'clean' : 'dirty',
     };
   } catch (err) {
-    if (err.message === 'Rate limit exceeded') {
-      // Fallback automático para o mock em caso de rate limit
-      const mock = await mockCheckCnpjStatus(cnpj);
-      return mock;
-    }
     console.error('Erro ao consultar CNPJ.ws:', err);
     throw err;
   }
@@ -137,16 +131,19 @@ export async function realGetNFes() {
 }
 
 export async function realSyncSefaz(obraId) {
-  // Exemplo de chamada real (quando configurada):
-  // const token = config.apis.focusNFe.token;
-  // if (!token) return mockSyncSefaz(obraId);
-  // const response = await fetch(`${config.apis.focusNFe.baseUrl}/nfe?cnpj=...`, {
+  const token = config.apis?.focusNFe?.token;
+  if (!token) {
+    throw new Error(
+      'Focus NFe API não configurada. Defina VITE_FOCUSNFE_TOKEN no .env ' +
+      'com seu token de autenticação do Focus NFe.'
+    );
+  }
+  // TODO: Implementar chamada real à API do Focus NFe
+  // const baseUrl = config.apis.focusNFe.baseUrl;
+  // const response = await fetch(`${baseUrl}/nfe?cnpj=...`, {
   //   headers: { 'Authorization': 'Basic ' + btoa(token + ':') }
   // });
-  // const data = await response.json();
-  // ...mapear e salvar no Supabase...
-  console.warn('[realSyncSefaz] Focus NFe API ainda nao integrada. Usando mock.');
-  return mockSyncSefaz(obraId);
+  throw new Error(`Focus NFe token encontrado, mas integração ainda não implementada.`);
 }
 
 export async function realManifestNFe(nfeId, type) {
@@ -154,7 +151,7 @@ export async function realManifestNFe(nfeId, type) {
 }
 
 export async function realLaunchNFe(nfeId, costCenter) {
-  return mockLaunchNFe(nfeId, costCenter);
+  throw new Error('Lançamento contábil não implementado. Integração com sistema contábil não configurada.');
 }
 
 export async function realGetNotifications() {
@@ -171,18 +168,14 @@ export async function realRunCronCheckAlerts() {
 }
 
 export async function realSimulateOCR(category, estimatedValue) {
-  // Exemplo de chamada real (quando configurada):
-  // const token = config.apis.plugOcr.token;
-  // if (!token) return mockSimulateOCR(category, estimatedValue);
-  // const formData = new FormData();
-  // formData.append('file', pdfFile);
-  // const response = await fetch('https://api.plugocr.com.br/v1/extract', {
-  //   method: 'POST',
-  //   headers: { 'api-key': token },
-  //   body: formData
-  // });
-  console.warn('[realSimulateOCR] PlugOCR ainda nao integrado. Usando mock.');
-  return mockSimulateOCR(category, estimatedValue);
+  const token = config.apis?.plugOcr?.token;
+  if (!token) {
+    throw new Error(
+      'PlugOCR API não configurada. Defina VITE_PLUGOCR_TOKEN no .env ' +
+      'com sua chave de API do PlugOCR.'
+    );
+  }
+  throw new Error('PlugOCR token encontrado, mas integração ainda não implementada.');
 }
 
 export async function realGetHistoricalData(ruleId) {

@@ -150,40 +150,7 @@ export async function mockGetNFes() {
 }
 
 export async function mockSyncSefaz(obraId) {
-  const { data: obrasData } = await supabase.from('obras').select('*').eq('id', obraId);
-  const obra = obrasData?.[0];
-  if (!obra) return [];
-
-  const novaChave = '4126' + String(Date.now()).substring(0, 8) + '00019955001' + Math.floor(Math.random()*999999999).toString().padStart(9,'0') + '1000' + Math.floor(Math.random()*9999).toString().padStart(4,'0');
-
-  const novaNota = {
-    obra_id: obraId,
-    chave_acesso: novaChave,
-    fornecedor: 'FORNECEDOR SEFAZ SYNC LTDA',
-    cnpj_fornecedor: '12.345.678/0001-99',
-    valor: parseFloat((Math.random() * 5000 + 100).toFixed(2)),
-    data_emissao: new Date().toISOString().split('T')[0],
-    status_sefaz: 'Autorizada',
-    status_manifesto: 'Sem Manifesto'
-  };
-
-  await supabase.from('notas_fiscais').insert([novaNota]);
-  const { data } = await supabase.from('notas_fiscais').select('*').eq('obra_id', obraId);
-  return (data || []).map(n => ({
-    id: n.id,
-    number: n.chave_acesso.substring(25, 34),
-    serie: n.chave_acesso.substring(22, 25),
-    issuer: n.fornecedor,
-    issuerCnpj: n.cnpj_fornecedor,
-    value: parseFloat(n.valor),
-    issueDate: n.data_emissao,
-    accessKey: n.chave_acesso,
-    obraId: n.obra_id,
-    manifestStatus: n.status_manifesto.toLowerCase().replace(' ', '_'),
-    launchStatus: n.status_sefaz === 'Autorizada' ? 'pendente' : 'cancelada',
-    costCenter: null,
-    items: []
-  }));
+  throw new Error('Focus NFe API não configurada. Configure VITE_FOCUSNFE_TOKEN no .env');
 }
 
 export async function mockManifestNFe(nfeId, type) {
@@ -196,19 +163,11 @@ export async function mockManifestNFe(nfeId, type) {
 }
 
 export async function mockLaunchNFe(nfeId, costCenter) {
-  console.log(`NFe ${nfeId} lançada no centro de custo ${costCenter}`);
-  return true;
+  throw new Error('Lançamento contábil não implementado. API de integração contábil não configurada.');
 }
 
 export async function mockGetNotifications() {
-  return [
-    {
-      id: 'notif-1',
-      timestamp: new Date().toISOString(),
-      type: 'info',
-      message: 'Sistema atualizado para Arquitetura SaaS (Supabase Ativo).'
-    }
-  ];
+  return [];
 }
 
 export async function mockDispatchManualAlert(billId, senderName) {
@@ -221,21 +180,7 @@ export async function mockRunCronCheckAlerts() {
 }
 
 export async function mockSimulateOCR(category, estimatedValue) {
-  const variation = (Math.random() * 0.3) - 0.08;
-  const realValue = parseFloat((estimatedValue * (1 + variation)).toFixed(2));
-  const randBlock = () => Math.floor(10000 + Math.random() * 90000);
-  const code = `836200000${Math.floor(realValue).toString().padStart(4, '0')}00${randBlock()}00${randBlock()}00${randBlock()}00${randBlock()}`;
-  const hoje = new Date();
-  const mesStr = String(hoje.getMonth() + 1).padStart(2, '0');
-  const anoStr = String(hoje.getFullYear());
-  const dueDay = category === 'Energia' ? 10 : (category === 'Água' ? 15 : 20);
-  const dueRealDate = `${anoStr}-${mesStr}-${dueDay.toString().padStart(2, '0')}`;
-
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve({ realValue, barcode: code, dueRealDate });
-    }, 1500);
-  });
+  throw new Error('PlugOCR API não configurada. Configure VITE_PLUGOCR_TOKEN no .env');
 }
 
 export async function mockGetHistoricalData(ruleId) {
@@ -256,27 +201,7 @@ export function mockAddNotification(type, message) {
 }
 
 export async function mockCheckCnpjStatus(cnpj) {
-  await new Promise(r => setTimeout(r, 1500));
-  const digito = cnpj.replace(/\D/g, '').slice(-1);
-  const ativo = parseInt(digito) > 3;
-  return {
-    cnpj,
-    razaoSocial: ativo ? 'Construtora UNITA Ltda' : 'Construtora UNITA Ltda - EM RECUPERACAO',
-    situacao: ativo ? 'ATIVA' : 'SUSPENSA',
-    ultimaAtualizacao: new Date().toISOString().split('T')[0],
-    dataAbertura: '2018-03-15',
-    porte: 'DEMAIS',
-    naturezaJuridica: '213-5 - Sociedade Empresária Limitada',
-    cnae: '4120-4/00 - Construção de edifícios',
-    logradouro: 'Av. Paulista, 1000',
-    bairro: 'Bela Vista',
-    municipio: 'São Paulo',
-    uf: 'SP',
-    cep: '01310-100',
-    telefone: '(11) 99999-0000',
-    email: 'contato@unita.com.br',
-    protestStatus: ativo ? 'clean' : 'dirty',
-  };
+  throw new Error('CNPJ.ws API não configurada. Configure VITE_DATA_PROVIDER=real no .env');
 }
 
 export async function mockGetProtestsByObra(obraId) {
