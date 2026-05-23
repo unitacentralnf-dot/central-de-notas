@@ -73,44 +73,36 @@
           </form>
         </div>
 
-        <div class="login-divider">Ou clique para simular</div>
+        <div class="login-divider"></div>
 
-        <!-- ⚠️ REMOVA EM PRODUÇÃO: credenciais de teste expostas no HTML -->
-        <div class="demo-users-grid">
-          <div class="demo-user-card adm" data-email="master@unita.com.br" data-pass="masterunita2026">
-            <div class="demo-avatar">CS</div>
-            <div class="demo-user-info">
-              <span class="demo-user-name">Carlos Silva</span>
-              <span class="demo-user-role">Administrador da Obra (ADM)</span>
-            </div>
-          </div>
-          <div class="demo-user-card eng" data-email="roberto@unita.com.br" data-pass="robertounita2026">
-            <div class="demo-avatar">RD</div>
-            <div class="demo-user-info">
-              <span class="demo-user-name">Eng. Roberto Dias</span>
-              <span class="demo-user-role">Engenheiro da Obra (Consultor)</span>
-            </div>
-          </div>
-          <div class="demo-user-card fin" data-email="mariana@unita.com.br" data-pass="marianaunita2026">
-            <div class="demo-avatar">ML</div>
-            <div class="demo-user-info">
-              <span class="demo-user-name">Mariana Lins</span>
-              <span class="demo-user-role">Controladora Financeira (Consultor)</span>
-            </div>
-          </div>
-          <div class="demo-user-card dir" data-email="arthur@unita.com.br" data-pass="arthurunita2026">
-            <div class="demo-avatar">AA</div>
-            <div class="demo-user-info">
-              <span class="demo-user-name">Arthur Albuquerque</span>
-              <span class="demo-user-role">Diretor de Operações (GGO)</span>
-            </div>
-          </div>
-          <div class="demo-user-card master" data-email="master@unitasistema.com.br" data-pass="unitamaster2026">
-            <div class="demo-avatar" style="background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(280, 80%, 55%));">MS</div>
-            <div class="demo-user-info">
-              <span class="demo-user-name">Sistema Master</span>
-              <span class="demo-user-role">Administrador Geral do Sistema</span>
-            </div>
+        <!-- Primeiro Acesso: criar conta admin (aparece quando não há usuários) -->
+        <div id="first-access-area" style="display: none; margin-top: 8px;">
+          <button id="btn-show-first-access" style="background: none; border: none; color: hsl(var(--color-primary)); font-size: 0.82rem; cursor: pointer; text-decoration: underline; opacity: 0.8;">
+            Primeiro acesso? Criar conta de administrador
+          </button>
+          <div id="first-access-form" style="display: none; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-light);">
+            <h3 style="font-size: 0.85rem; font-weight: 700; color: white; margin-bottom: 12px; text-align: center;">Criar Administrador Master</h3>
+            <p style="font-size: 0.75rem; color: hsl(var(--text-muted)); text-align: center; margin-bottom: 14px;">
+              Nenhum usuário encontrado. Crie a conta de administrador geral para começar.
+            </p>
+            <form id="first-access-form-inner">
+              <div class="form-group">
+                <label class="form-label" for="fa-nome">Nome Completo</label>
+                <input type="text" id="fa-nome" class="form-control" placeholder="Seu nome" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="fa-email">E-mail</label>
+                <input type="email" id="fa-email" class="form-control" placeholder="admin@empresa.com.br" required />
+              </div>
+              <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label" for="fa-senha">Senha</label>
+                <input type="password" id="fa-senha" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6" />
+              </div>
+              <div id="fa-error-msg" style="display: none; background-color: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px; border-radius: var(--radius-sm); color: hsl(var(--color-danger)); font-size: 0.8rem; text-align: center; margin-bottom: 12px;"></div>
+              <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center;">
+                Criar e Entrar
+              </button>
+            </form>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
 import './style.css';
-import { initializeData, getObras, loginUser, submitAccessRequest } from './services/dataService.js';
+import { initializeData, getObras, loginUser, submitAccessRequest, getUsuarios, createUsuario } from './services/dataService.js';
 import { renderDashboard } from './components/Dashboard.js';
 import { renderNFe } from './components/NFe.js';
 import { renderFixedBills } from './components/FixedBills.js';
@@ -46,6 +46,7 @@ const viewTitles = {
 async function init() {
   setupLoginEvents();
   setupAccessRequestForm();
+  setupFirstAccess();
 
   const cachedUser = sessionStorage.getItem('current_user');
   if (cachedUser) {
@@ -106,17 +107,6 @@ function setupLoginEvents() {
     });
   }
 
-  document.querySelectorAll('.demo-user-card').forEach(card => {
-    card.addEventListener('click', (e) => {
-      const email = e.currentTarget.getAttribute('data-email');
-      const pass = e.currentTarget.getAttribute('data-pass');
-      const emailInput = document.getElementById('login-email');
-      const passInput = document.getElementById('login-password');
-      if (emailInput) emailInput.value = email;
-      if (passInput) passInput.value = pass;
-      if (loginForm) loginForm.requestSubmit();
-    });
-  });
 }
 
 // Lógica do formulário de Solicitação de Acesso
@@ -154,6 +144,61 @@ function setupAccessRequestForm() {
         accessRequestForm.reset();
       } else {
         if (errorMsg) errorMsg.style.display = 'block';
+      }
+    });
+  }
+}
+
+// Lógica do formulário de Primeiro Acesso (criação de admin master)
+function setupFirstAccess() {
+  const btnShow = document.getElementById('btn-show-first-access');
+  const panel = document.getElementById('first-access-form');
+  const form = document.getElementById('first-access-form-inner');
+  const faArea = document.getElementById('first-access-area');
+
+  if (!faArea) return;
+
+  // Verifica se existem usuários — se não, mostra a área
+  getUsuarios().then(users => {
+    if (users.length === 0) {
+      faArea.style.display = 'block';
+    }
+  });
+
+  if (btnShow && panel) {
+    btnShow.addEventListener('click', () => {
+      panel.style.display = panel.style.display !== 'none' ? 'none' : 'block';
+    });
+  }
+
+  if (form) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nome = document.getElementById('fa-nome').value.trim();
+      const email = document.getElementById('fa-email').value.trim();
+      const senha = document.getElementById('fa-senha').value;
+      const errorMsg = document.getElementById('fa-error-msg');
+
+      if (errorMsg) errorMsg.style.display = 'none';
+
+      try {
+        const result = await createUsuario({ nome, email, senha, role: 'master', obraId: null });
+        if (result) {
+          const user = await loginUser(email, senha);
+          if (user) {
+            currentUser = user;
+            currentRole = user.role;
+            sessionStorage.setItem('current_user', JSON.stringify(user));
+            document.getElementById('login-screen').classList.remove('active');
+            document.getElementById('app').style.display = 'flex';
+            await startApp();
+          }
+        }
+      } catch (err) {
+        if (errorMsg) {
+          errorMsg.textContent = `Erro ao criar usuário: ${err.message}`;
+          errorMsg.style.display = 'block';
+        }
       }
     });
   }
