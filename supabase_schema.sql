@@ -244,3 +244,18 @@ CREATE POLICY "Permitir insert anonimo" ON public.cnpj_cache FOR INSERT WITH CHE
 
 DROP POLICY IF EXISTS "Permitir update anonimo" ON public.cnpj_cache;
 CREATE POLICY "Permitir update anonimo" ON public.cnpj_cache FOR UPDATE USING (true);
+
+-- Integrações por Obra (metadados; segredos devem ser criptografados via Edge Function)
+CREATE TABLE IF NOT EXISTS public.obra_integrations (
+    obra_id UUID PRIMARY KEY REFERENCES public.obras(id) ON DELETE CASCADE,
+    focus_a1_object_path TEXT,
+    focus_a1_passphrase_enc TEXT,
+    focus_a1_updated_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE public.obra_integrations ENABLE ROW LEVEL SECURITY;
+
+-- Dev policies (ajuste para Auth depois)
+DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.obra_integrations;
+CREATE POLICY "Permitir leitura anonima" ON public.obra_integrations FOR SELECT USING (true);

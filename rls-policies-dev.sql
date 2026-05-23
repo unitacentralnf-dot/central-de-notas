@@ -80,3 +80,7 @@ DROP POLICY IF EXISTS "Permitir insert anonimo" ON public.cnpj_cache;
 CREATE POLICY "Permitir insert anonimo" ON public.cnpj_cache FOR INSERT WITH CHECK (true);
 DROP POLICY IF EXISTS "Permitir update anonimo" ON public.cnpj_cache;
 CREATE POLICY "Permitir update anonimo" ON public.cnpj_cache FOR UPDATE USING (true);
+
+-- OBRA_INTEGRATIONS
+DROP POLICY IF EXISTS "Permitir leitura anonima" ON public.obra_integrations;
+CREATE POLICY "Permitir leitura anonima" ON public.obra_integrations FOR SELECT USING (true);
