@@ -3,7 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-const isSupabaseConfigured = !!(supabaseUrl && supabaseUrl.indexOf('sua-url-do-supabase') === -1 && supabaseAnonKey);
+// Verifica se as variáveis de ambiente essenciais foram fornecidas.
+// Não depende de valores placeholder específicos.
+const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey && !supabaseUrl.includes('sua-url-do-supabase'));
 
 export const supabase = isSupabaseConfigured 
   ? createClient(supabaseUrl, supabaseAnonKey) 

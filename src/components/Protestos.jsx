@@ -1,7 +1,7 @@
-// src/components/Protests.js
-
+// src/components/Protestos.jsx
+import React, { useState } from "react";
 import { getProtestos } from "../services/api.js";
-import "../style.css";
+import "../index.css";
 
 /**
  * Renderiza a tela de consulta de protestos.

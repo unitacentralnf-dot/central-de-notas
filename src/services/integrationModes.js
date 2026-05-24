@@ -4,7 +4,7 @@ const DEFAULTS = {
   protests: 'fixtures', // fixtures | edge | disabled
   nfe: 'fixtures',
   dda: 'fixtures',
-  ocr: 'disabled',
+  ocr: 'fixtures',
 };
 
 export function getIntegrationModes() {

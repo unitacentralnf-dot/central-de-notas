@@ -27,12 +27,12 @@ Tokens de APIs (FocusNFe, DDA, OCR, Protestos) **nao podem ficar no client**.
 3. Link no projeto: `supabase link --project-ref <seu_ref>`
 4. Deploy da funcao: `supabase functions deploy integrations-status`
 5. Defina secrets/env vars no Supabase:
-   - `FOCUSNFE_TOKEN`
-   - `PLUGOCR_TOKEN`
-   - `PROTESTS_PROVIDER`
-   - `DDA_PROVIDER`
-   - `INTEGRATIONS_ENC_KEY_B64` (32 bytes base64 para AES-GCM)
-   - `CERTS_BUCKET` (ex.: integration-certs)
+   - `VITE_FOCUS_API_KEY` (para API do FocusNFe)
+   - `VITE_CELCOIN_API_KEY` (para API da Celcoin)
+   - `VITE_CENPROT_API_KEY` (para API da Cenprot)
+   - `VITE_GCP_VISION_KEY` (para API de OCR do Google Vision)
+   - `VITE_SUPABASE_URL` (injetado automaticamente ou manual)
+   - `VITE_SUPABASE_SERVICE_KEY` (injetado automaticamente ou manual)
 
 ## Observacao
 

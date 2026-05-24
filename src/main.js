@@ -9,6 +9,7 @@ import { renderProtests } from './components/Protests.js';
 import { renderDDA } from './components/DDA.js';
 import { renderMaster } from './components/Master.js';
 import { renderIntegrations } from './components/Integrations.js';
+import { renderOCR } from './components/OCRUploader.js';
 
 // Estado da Aplicação na Sessão
 let currentView = 'dashboard'; 
@@ -37,6 +38,7 @@ const navItems = {
   'fixed-bills': document.getElementById('nav-fixed-bills'),
   'protests': document.getElementById('nav-protests'),
   'integrations': document.getElementById('nav-integrations'),
+  'ocr': document.getElementById('nav-ocr'),
   'master': document.getElementById('nav-master'),
 };
 
@@ -48,6 +50,7 @@ const viewTitles = {
   'fixed-bills': 'Gestão de Contas Fixas Recorrentes',
   'protests': 'Regularidade Fiscal (Protestos CNPJ)',
   'integrations': 'Integrações & Modos de Operação',
+  'ocr': 'OCR — Leitura de Documentos (Google Vision)',
   'master': 'Painel Master — Administração do Sistema',
 };
 
@@ -456,6 +459,8 @@ async function renderActiveView() {
     await renderProtests(contentContainer, currentRole, currentObraId);
   } else if (currentView === 'integrations') {
     await renderIntegrations(contentContainer);
+  } else if (currentView === 'ocr') {
+    await renderOCR(contentContainer, currentRole, currentObraId);
   } else if (currentView === 'master') {
     await renderMaster(contentContainer, currentUser);
   }

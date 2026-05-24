@@ -1,0 +1,14 @@
+- [ ] Verificar .env com chaves Supabase e placeholders para APIs futuras
+- [ ] Garantir repositório limpo e branch main sincronizado
+- [ ] Criar diretório supabase/functions
+- [ ] Adicionar README explicando padrão de input/output para Edge Functions
+- [ ] Implementar esqueleto genérico apiGateway.ts que delega chamadas de API via variáveis de ambiente
+- [ ] Deploy de teste da function (testFunction) para validar pipeline
+- [ ] Atualizar supabase_schema.sql com tabelas notas, obras, boletos, protestos, audit_logs
+- [ ] Executar supabase db push
+- [ ] Criar componentes UI UploadNFe.jsx, OCRUploader.jsx, Protestos.jsx
+- [ ] Adicionar rotas no router
+- [ ] Atualizar .env.example com variáveis de ambiente para APIs externas
+- [ ] Documentar no README.md como preencher chaves
+- [ ] Criar testes unitários para Edge Functions
+- [ ] Configurar monitoramento e alertas
