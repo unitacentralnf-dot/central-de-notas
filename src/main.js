@@ -77,10 +77,12 @@ function initTheme() {
   currentTheme = (saved === 'dark' || saved === 'light') ? saved : 'light';
   applyTheme(currentTheme);
 
-  const btn = document.getElementById('btn-theme-toggle');
-  if (btn) {
-    btn.addEventListener('click', () => {
-      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  const checkbox = document.getElementById('theme-checkbox');
+  if (checkbox) {
+    // Inicializa o estado do checkbox conforme o tema salvo
+    checkbox.checked = currentTheme === 'dark';
+    checkbox.addEventListener('change', () => {
+      currentTheme = checkbox.checked ? 'dark' : 'light';
       localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
       applyTheme(currentTheme);
     });
@@ -89,11 +91,10 @@ function initTheme() {
 
 function applyTheme(theme) {
   document.body.setAttribute('data-theme', theme);
-  const sun = document.getElementById('theme-icon-sun');
-  const moon = document.getElementById('theme-icon-moon');
-  if (sun && moon) {
-    sun.style.display = theme === 'dark' ? 'block' : 'none';
-    moon.style.display = theme === 'dark' ? 'none' : 'block';
+  // Atualiza o estado do checkbox (caso a função seja chamada externamente)
+  const checkbox = document.getElementById('theme-checkbox');
+  if (checkbox) {
+    checkbox.checked = theme === 'dark';
   }
 }
 
