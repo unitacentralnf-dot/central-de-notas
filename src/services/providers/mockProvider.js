@@ -118,7 +118,7 @@ export async function mockGetBills() {
 
 export async function mockSaveBill(bill) {
   const { data, error } = await db().from('faturas').upsert({
-    id: bill.id || undefined,
+    id: bill.id && !String(bill.id).startsWith('temp-') ? bill.id : undefined,
     conta_fixa_id: bill.ruleId,
     mes_referencia: `${bill.ano}-${bill.mes}`,
     valor: bill.valorReal || bill.valorEstimado,

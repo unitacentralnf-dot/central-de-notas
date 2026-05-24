@@ -29,11 +29,46 @@ export async function saveBill(bill) { return provider.mockSaveBill(bill); }
 
 export async function getBillsForPeriod(mes, ano, obraId = '') {
   const bills = await getBills();
-  let filtered = bills.filter(b => b.mes === mes && b.ano === ano);
-  if (obraId) {
-    filtered = filtered.filter(b => b.obraId === obraId);
+  const rules = await getRules();
+  
+  const hasObraId = obraId && obraId !== 'null' && obraId !== 'undefined';
+  
+  // Filtrar as faturas existentes do período
+  let filteredBills = bills.filter(b => b.mes === mes && b.ano === ano);
+  if (hasObraId) {
+    filteredBills = filteredBills.filter(b => b.obraId === obraId);
   }
-  return filtered;
+  
+  // Filtrar as regras correspondentes
+  let activeRules = rules;
+  if (hasObraId) {
+    activeRules = rules.filter(r => r.obraId === obraId);
+  }
+  
+  // Cria faturas virtuais 'nao_chegou' para cada regra cadastrada que ainda não tem fatura lançada no período
+  const finalBills = [...filteredBills];
+  for (const rule of activeRules) {
+    const hasBill = filteredBills.some(b => b.ruleId === rule.id);
+    if (!hasBill) {
+      finalBills.push({
+        id: `temp-${rule.id}`, // ID temporário para identificação no front-end
+        ruleId: rule.id,
+        obraId: rule.obraId,
+        mes,
+        ano,
+        status: 'nao_chegou',
+        valorReal: null,
+        valorEstimado: rule.estimatedValue,
+        vencimentoReal: null,
+        vencimentoPadrao: rule.dueDay,
+        codigoBarras: null,
+        comprovante: null,
+        alertDispatched: false
+      });
+    }
+  }
+  
+  return finalBills;
 }
 
 // --- NOTAS FISCAIS (NFE) ---
