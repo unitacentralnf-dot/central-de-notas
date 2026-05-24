@@ -71,6 +71,41 @@ body[data-theme='light'] {
 }
 
 /* ========================================================= */
+/* DARK THEME (Premium) */
+body[data-theme='dark'] {
+  /* As variáveis já estão definidas em :root, aqui apenas garantimos que os componentes usem as cores corretas */
+}
+
+body[data-theme='dark'] header.header {
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-light);
+}
+
+body[data-theme='dark'] .header-title-container h1 {
+  color: hsl(var(--text-main));
+}
+
+body[data-theme='dark'] .card-premium {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-card);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2), 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+body[data-theme='dark'] .card-premium:hover {
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25), 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+body[data-theme='dark'] .profile-badge {
+  color: hsl(var(--text-main));
+}
+
+/* Transições suaves */
+body, header.header, .card-premium, .profile-badge {
+  transition: var(--transition-normal);
+}
 /* Light Theme - Correções de opacidade/contraste             */
 /* ========================================================= */
 
