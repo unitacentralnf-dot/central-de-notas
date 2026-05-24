@@ -347,7 +347,7 @@ async function renderRulesView(container, currentRole, activeObraId) {
   const obras = await getObras();
   const fmt = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 
-  const isAdm = currentRole === 'adm';
+  const isAdm = currentRole === 'adm' || currentRole === 'master';
 
   const html = `
     <div class="layout-split">
@@ -551,12 +551,12 @@ async function renderChartPanel(ruleId) {
 // --- MODAIS DO MÓDULO ---
 
 // 1. Modal para Criar/Editar Regra (ADM)
-function openRuleModal(rule = null, viewContainer, currentRole, activeObraId) {
+async function openRuleModal(rule = null, viewContainer, currentRole, activeObraId) {
   const modal = document.getElementById('global-modal');
   const modalTitle = document.getElementById('modal-title');
   const modalBody = document.getElementById('modal-body');
   const modalFooter = document.getElementById('modal-footer');
-  const obras = getObras();
+  const obras = await getObras();
 
   modalTitle.textContent = rule ? 'Editar Regra de Conta Fixa' : 'Cadastrar Regra de Conta Fixa';
 
@@ -676,7 +676,7 @@ async function openUploadModal(billId, currentRole, activeObraId, viewContainer)
   
   if (!bill || !rule) return;
 
-  const isAdm = currentRole === 'adm';
+  const isAdm = currentRole === 'adm' || currentRole === 'master';
 
   modalTitle.textContent = isAdm ? 'Anexar Fatura - Leitura OCR Inteligente' : 'Fatura Pendente (Modo Consulta)';
 
