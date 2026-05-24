@@ -142,7 +142,7 @@ export async function renderDashboard(container, currentRole, activeObraId) {
                   return `
                     <tr>
                       <td>
-                        <div style="font-weight: 600; color: white;">${obra.name}</div>
+                        <div style="font-weight: 600; color: hsl(var(--text-main));">${obra.name}</div>
                         <div style="font-size: 0.8rem; color: hsl(var(--text-dim));">${obra.address}</div>
                       </td>
                       <td style="font-family: monospace; font-size: 0.85rem;">${obra.cnpj}</td>
@@ -214,7 +214,7 @@ export async function renderDashboard(container, currentRole, activeObraId) {
                   return `
                     <div style="background-color: hsl(var(--bg-input)); padding: 10px; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; gap: 10px;">
                       <div style="font-size: 0.8rem;">
-                        <span style="color: white; font-weight: 600;">${rule.name}</span>
+                        <span style="color: hsl(var(--text-main)); font-weight: 600;">${rule.name}</span>
                         <div style="color: hsl(var(--text-dim)); font-size: 0.75rem;">Obra: ${obra.name} | Vence: dia ${b.vencimentoPadrao}</div>
                       </div>
                       <button class="btn btn-danger btn-sm manual-alert-btn" data-bill="${b.id}" style="padding: 4px 8px; font-size: 0.75rem;">Cobrar ADM</button>

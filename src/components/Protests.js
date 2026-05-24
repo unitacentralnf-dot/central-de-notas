@@ -28,7 +28,7 @@ export async function renderProtests(container, currentRole, initialObraId = '')
       const activeProtests = realProtests.filter(p => p.status === 'Ativo');
       initialDetailsHtml = activeProtests.map(p => `
         <div style="background-color: hsl(var(--bg-input)); border: 1px solid var(--border-light); padding: 16px; border-radius: var(--radius-sm); font-size: 0.85rem; line-height: 1.4;">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 600; color: white;">
+           <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-weight: 600; color: hsl(var(--text-main));">
             <span>Credor: ${p.creditor}</span>
             <span style="color: hsl(var(--color-danger));">${p.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
           </div>
@@ -59,7 +59,7 @@ export async function renderProtests(container, currentRole, initialObraId = '')
             </div>
             <div>
               <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: hsl(var(--color-primary)); margin-bottom: 2px;">Obra em Varredura</div>
-              <div style="font-weight: 700; color: white; font-size: 1rem;">${selectedObra ? selectedObra.name : 'Nenhuma obra selecionada'}</div>
+              <div style="font-weight: 700; color: hsl(var(--text-main)); font-size: 1rem;">${selectedObra ? selectedObra.name : 'Nenhuma obra selecionada'}</div>
               ${selectedObra ? `<div style="font-size: 0.78rem; color: hsl(var(--text-muted)); font-family: monospace;">CNPJ: ${selectedObra.cnpj}</div>` : ''}
             </div>
             <div style="margin-left: auto; font-size: 0.75rem; color: hsl(var(--text-dim)); text-align: right;">
@@ -73,7 +73,7 @@ export async function renderProtests(container, currentRole, initialObraId = '')
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" style="width: 64px; height: 64px; color: hsl(var(--text-muted)); margin-bottom: 16px; margin-inline: auto;">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286Zm0 13.036h.008v.008H12v-.008Z" />
               </svg>
-               <h3 style="color: white; font-size: 1.1rem; margin-bottom: 8px;">Varredura de Protestos (Dev/Fixtures)</h3>
+               <h3 style="color: hsl(var(--text-main)); font-size: 1.1rem; margin-bottom: 8px;">Varredura de Protestos (Dev/Fixtures)</h3>
                <p style="font-size: 0.85rem; color: hsl(var(--text-muted)); max-width: 420px; margin-inline: auto; margin-bottom: 24px;">
                  Em desenvolvimento, o sistema roda em <strong>Fixtures</strong> para manter tudo operacional sem credenciais.
                  Quando você escolher o provedor (CENPROT/IEPTB/Serasa etc.), essa mesma ação vai chamar a Edge Function.
@@ -219,11 +219,11 @@ function renderStatusPanelHtml(obra, detailsHtml, isAdm) {
           <span style="color: hsl(var(--text-muted));">Situação:</span>
           <span style="color: hsl(var(--color-success)); font-weight: 600;">${scanResult.situacao}</span>
           <span style="color: hsl(var(--text-muted));">Razão Social:</span>
-          <span style="color: white;">${scanResult.razaoSocial}</span>
-          ${scanResult.cnae ? `<span style="color: hsl(var(--text-muted));">CNAE:</span><span style="color: white;">${scanResult.cnae}</span>` : ''}
-          ${scanResult.municipio ? `<span style="color: hsl(var(--text-muted));">Município:</span><span style="color: white;">${scanResult.municipio}/${scanResult.uf}</span>` : ''}
+           <span style="color: hsl(var(--text-main));">${scanResult.razaoSocial}</span>
+           ${scanResult.cnae ? `<span style="color: hsl(var(--text-muted));">CNAE:</span><span style="color: hsl(var(--text-main));">${scanResult.cnae}</span>` : ''}
+           ${scanResult.municipio ? `<span style="color: hsl(var(--text-muted));">Município:</span><span style="color: hsl(var(--text-main));">${scanResult.municipio}/${scanResult.uf}</span>` : ''}
           <span style="color: hsl(var(--text-muted));">Atualização:</span>
-          <span style="color: white;">${scanResult.ultimaAtualizacao}</span>
+           <span style="color: hsl(var(--text-main));">${scanResult.ultimaAtualizacao}</span>
         </div>
       </div>
     ` : '';
@@ -241,7 +241,7 @@ function renderStatusPanelHtml(obra, detailsHtml, isAdm) {
             <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
           </svg>
         </div>
-        <h3 style="color: white; font-size: 1.4rem; margin-bottom: 8px;">CNPJ Totalmente Regular</h3>
+        <h3 style="color: hsl(var(--text-main)); font-size: 1.4rem; margin-bottom: 8px;">CNPJ Totalmente Regular</h3>
         <p style="color: hsl(var(--text-muted)); font-size: 0.9rem; max-width: 320px; margin-inline: auto; line-height: 1.4;">
           Nenhum protesto de título foi identificado para a obra <strong>${obra.name}</strong> nas consultas mais recentes.
         </p>
@@ -258,7 +258,7 @@ function renderStatusPanelHtml(obra, detailsHtml, isAdm) {
         <span style="color: hsl(var(--text-muted));">Situação:</span>
         <span style="color: hsl(var(--color-danger)); font-weight: 600;">${scanResult.situacao}</span>
         <span style="color: hsl(var(--text-muted));">Razão Social:</span>
-        <span style="color: white;">${scanResult.razaoSocial}</span>
+        <span style="color: hsl(var(--text-main));">${scanResult.razaoSocial}</span>
       </div>
     </div>
   ` : '';
@@ -278,14 +278,14 @@ function renderStatusPanelHtml(obra, detailsHtml, isAdm) {
       </div>
 
       <!-- Detalhamento dos Protestos -->
-      <h3 style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: white; margin-bottom: 12px;">Lista de Títulos Protestados</h3>
+      <h3 style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: hsl(var(--text-main)); margin-bottom: 12px;">Lista de Títulos Protestados</h3>
       <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
         ${detailsHtml}
       </div>
 
       <!-- Painel de Envio de Anuência -->
       <div style="border-top: 1px solid var(--border-light); padding-top: 20px;">
-        <h3 style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: white; margin-bottom: 8px;">Regularização no Sistema</h3>
+        <h3 style="font-size: 0.85rem; font-weight: 700; text-transform: uppercase; color: hsl(var(--text-main)); margin-bottom: 8px;">Regularização no Sistema</h3>
         <p style="font-size: 0.8rem; color: hsl(var(--text-muted)); margin-bottom: 16px; line-height: 1.4;">
           Para remover o status de alerta do CNPJ da obra, anexe a **Carta de Anuência** ou o **Comprovante de Quitação** autenticado em cartório.
         </p>

@@ -41,7 +41,7 @@ export async function renderDDA(container, currentRole, activeObraId) {
     <div class="dda-view animate-fade-in">
       <div class="filter-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div style="font-size: 0.95rem; color: hsl(var(--text-muted)); font-weight: 500;">
-          Caixa de Entrada DDA (Obra): <strong style="color: white;">${selectedObra ? selectedObra.name : 'Nenhuma'}</strong> <span style="font-size: 0.8rem; color: hsl(var(--text-dim)); font-family: monospace; margin-left: 6px;">(CNPJ: ${selectedObra ? selectedObra.cnpj : ''})</span>
+          Caixa de Entrada DDA (Obra): <strong style="color: hsl(var(--text-main));">${selectedObra ? selectedObra.name : 'Nenhuma'}</strong> <span style="font-size: 0.8rem; color: hsl(var(--text-dim)); font-family: monospace; margin-left: 6px;">(CNPJ: ${selectedObra ? selectedObra.cnpj : ''})</span>
         </div>
 
         <button class="btn btn-primary" id="btn-sync-dda">
@@ -90,7 +90,7 @@ export async function renderDDA(container, currentRole, activeObraId) {
                 <div class="card-premium" style="display: flex; flex-direction: column; gap: 8px; padding: 16px;">
                   <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                     <div>
-                      <div style="font-weight: 600; color: white;">${b.emissorNome}</div>
+                      <div style="font-weight: 600; color: hsl(var(--text-main));">${b.emissorNome}</div>
                       <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); font-family: monospace;">CNPJ: ${b.emissorCnpj}</div>
                     </div>
                     <div style="text-align: right;">
@@ -120,7 +120,7 @@ export async function renderDDA(container, currentRole, activeObraId) {
               return `
                 <div style="padding: 12px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-light); border-radius: var(--radius-md);">
                   <div style="display: flex; justify-content: space-between;">
-                    <div style="font-weight: 500; font-size: 0.85rem; color: white;">${b.emissorNome}</div>
+                    <div style="font-weight: 500; font-size: 0.85rem; color: hsl(var(--text-main));">${b.emissorNome}</div>
                     <span class="badge badge-success"><span class="badge-dot"></span>${badgeText}</span>
                   </div>
                   <div style="display: flex; justify-content: space-between; margin-top: 8px;">

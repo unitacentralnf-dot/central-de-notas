@@ -16,6 +16,10 @@ let currentRole = 'adm';
 let currentObraId = ''; 
 let currentUser = null;
 
+// Tema
+const THEME_STORAGE_KEY = 'ui_theme_v1';
+let currentTheme = 'light';
+
 initializeData();
 
 // Elementos do DOM
@@ -49,6 +53,7 @@ const viewTitles = {
 
 // Inicialização Geral
 async function init() {
+  initTheme();
   setupLoginEvents();
   setupAccessRequestForm();
   setupFirstAccess();
@@ -65,6 +70,27 @@ async function init() {
     document.getElementById('login-screen').classList.add('active');
     document.getElementById('app').style.display = 'none';
   }
+}
+
+function initTheme() {
+  const saved = localStorage.getItem(THEME_STORAGE_KEY);
+  currentTheme = (saved === 'dark' || saved === 'light') ? saved : 'light';
+  applyTheme(currentTheme);
+
+  const btn = document.getElementById('btn-theme-toggle');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem(THEME_STORAGE_KEY, currentTheme);
+      applyTheme(currentTheme);
+    });
+  }
+}
+
+function applyTheme(theme) {
+  document.body.setAttribute('data-theme', theme);
+  const t = document.getElementById('theme-toggle-text');
+  if (t) t.textContent = theme === 'dark' ? 'Escuro' : 'Claro';
 }
 
 async function startApp() {

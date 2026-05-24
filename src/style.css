@@ -49,6 +49,27 @@
   --transition-slow: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Light Theme (Premium) */
+body[data-theme='light'] {
+  --bg-app: 220 20% 97%;         /* off-white */
+  --bg-card: 0 0% 100%;          /* white */
+  --bg-sidebar: 220 22% 96%;
+  --bg-input: 220 20% 94%;
+  --bg-hover: 220 22% 90%;
+
+  --text-main: 222 30% 12%;      /* slate */
+  --text-muted: 222 18% 38%;
+  --text-dim: 222 14% 48%;
+
+  --border-light: rgba(15, 23, 42, 0.08);
+  --border-card: rgba(15, 23, 42, 0.10);
+  --border-focus: rgba(99, 102, 241, 0.28);
+
+  --shadow-sm: 0 2px 10px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 10px 30px rgba(15, 23, 42, 0.10);
+  --shadow-lg: 0 20px 60px rgba(15, 23, 42, 0.14);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;

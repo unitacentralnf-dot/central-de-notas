@@ -121,7 +121,7 @@ async function renderMonthlyView(container, currentRole, activeObraId) {
     <!-- Barra de Filtros -->
     <div class="filter-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
       <div style="font-size: 0.95rem; color: hsl(var(--text-muted)); font-weight: 500;">
-        Obra Integrada: <strong style="color: white;">${selectedObra ? selectedObra.name : 'Nenhuma'}</strong> <span style="font-size: 0.8rem; color: hsl(var(--text-dim)); font-family: monospace; margin-left: 6px;">${selectedObra ? `(CNPJ: ${selectedObra.cnpj})` : ''}</span>
+        Obra Integrada: <strong style="color: hsl(var(--text-main));">${selectedObra ? selectedObra.name : 'Nenhuma'}</strong> <span style="font-size: 0.8rem; color: hsl(var(--text-dim)); font-family: monospace; margin-left: 6px;">${selectedObra ? `(CNPJ: ${selectedObra.cnpj})` : ''}</span>
       </div>
       
       <div class="filter-item">
@@ -139,7 +139,7 @@ async function renderMonthlyView(container, currentRole, activeObraId) {
           <span style="font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase;">Total Orçado</span>
           <span style="font-size: 1.25rem;">📋</span>
         </div>
-        <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-top: 8px;">${fmt(totalOrcado)}</div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: hsl(var(--text-main)); margin-top: 8px;">${fmt(totalOrcado)}</div>
         <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); margin-top: 4px;">Previsão de custos fixos</div>
       </div>
 
@@ -148,7 +148,7 @@ async function renderMonthlyView(container, currentRole, activeObraId) {
           <span style="font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase;">Realizado / Lançado</span>
           <span style="font-size: 1.25rem;">💰</span>
         </div>
-        <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-top: 8px;">${fmt(totalReal)}</div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: hsl(var(--text-main)); margin-top: 8px;">${fmt(totalReal)}</div>
         <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); margin-top: 4px;">Faturas já identificadas/pagas</div>
       </div>
 
@@ -157,7 +157,7 @@ async function renderMonthlyView(container, currentRole, activeObraId) {
           <span style="font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase;">Faturas Atrasadas / Pendentes</span>
           <span style="font-size: 1.25rem;">⚠️</span>
         </div>
-        <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-top: 8px;">${pendenciasCount} Contas</div>
+        <div style="font-size: 1.5rem; font-weight: 700; color: hsl(var(--text-main)); margin-top: 8px;">${pendenciasCount} Contas</div>
         <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); margin-top: 4px;">Aguardando envio pelo canteiro</div>
       </div>
     </section>
@@ -239,7 +239,7 @@ async function renderMonthlyView(container, currentRole, activeObraId) {
                 <div class="bill-card-details">
                   <div>Vencimento: <strong>${dtReal}</strong></div>
                   <div>Orçado: <strong>${fmt(b.valorEstimado)}</strong></div>
-                  <div style="color: white;">Real Lido: <strong>${fmt(b.valorReal)}</strong></div>
+                  <div style="color: hsl(var(--text-main));">Real Lido: <strong>${fmt(b.valorReal)}</strong></div>
                 </div>
                 <div class="bill-card-footer">
                   <span style="font-size: 0.75rem; color: hsl(var(--text-dim));">Ação: ${currentRole === 'adm' ? 'Lançar/Pagar' : 'Visualizar'}</span>
@@ -379,7 +379,7 @@ async function renderRulesView(container, currentRole, activeObraId) {
                 const obra = obras.find(o => o.id === rule.obraId);
                 return `
                   <tr>
-                    <td><span style="font-weight: 600; color: white;">${rule.name}</span></td>
+                    <td><span style="font-weight: 600; color: hsl(var(--text-main));">${rule.name}</span></td>
                     <td><span class="badge badge-info">${rule.category}</span></td>
                     <td>${obra ? obra.name : 'Não vinculada'}</td>
                     <td>Todo dia ${rule.dueDay}</td>
@@ -611,7 +611,7 @@ async function openRuleModal(rule = null, viewContainer, currentRole, activeObra
       </div>
 
       <div style="border-top: 1px dotted var(--border-light); margin-top: 16px; padding-top: 16px;">
-        <h4 style="font-size: 0.8rem; text-transform: uppercase; color: white; margin-bottom: 12px;">Contatos para Alerta</h4>
+        <h4 style="font-size: 0.8rem; text-transform: uppercase; color: hsl(var(--text-main)); margin-bottom: 12px;">Contatos para Alerta</h4>
         
         <div class="form-group">
           <label class="form-label" for="rule-emails-input">E-mails (Separados por vírgula)</label>
@@ -913,7 +913,7 @@ async function openProcessModal(billId, currentRole, activeObraId, viewContainer
         <table class="table-premium" aria-label="Informações da fatura recebida">
           <tr>
             <td style="font-weight: 600; width: 180px;">Valor Real Lido:</td>
-            <td style="color: white; font-weight: 700;">${fmt(bill.valorReal)}</td>
+            <td style="color: hsl(var(--text-main)); font-weight: 700;">${fmt(bill.valorReal)}</td>
           </tr>
           <tr>
             <td style="font-weight: 600;">Data Vencimento Real:</td>
@@ -952,12 +952,12 @@ async function openProcessModal(billId, currentRole, activeObraId, viewContainer
   // Formulário para o ADM atualizar status para Lançado ou Pago
   modalBody.innerHTML = `
     <div>
-      <h4 style="color: white; margin-bottom: 12px;">Dados da Fatura</h4>
+      <h4 style="color: hsl(var(--text-main)); margin-bottom: 12px;">Dados da Fatura</h4>
       
       <table class="table-premium" style="margin-bottom: 24px;" aria-label="Detalhes da fatura para lançamento">
         <tr>
           <td style="font-weight: 600; width: 150px;">Valor Real:</td>
-          <td style="color: white; font-weight: 700; font-size: 1.1rem;">${fmt(bill.valorReal)}</td>
+          <td style="color: hsl(var(--text-main)); font-weight: 700; font-size: 1.1rem;">${fmt(bill.valorReal)}</td>
         </tr>
         <tr>
           <td style="font-weight: 600;">Vencimento:</td>
@@ -1078,7 +1078,7 @@ async function openViewOnlyModal(billId) {
         </tr>
         <tr>
           <td style="font-weight: 600;">Valor Pago/Lançado:</td>
-          <td style="color: white; font-weight: 700; font-size: 1.1rem;">${fmt(bill.valorReal)}</td>
+          <td style="color: hsl(var(--text-main)); font-weight: 700; font-size: 1.1rem;">${fmt(bill.valorReal)}</td>
         </tr>
         <tr>
           <td style="font-weight: 600;">Data do Vencimento:</td>

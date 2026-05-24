@@ -10,7 +10,7 @@ function renderSelectRow({ key, title, desc, current }) {
   return `
     <div class="card-premium" style="padding: 18px; display: flex; gap: 14px; align-items: flex-start;">
       <div style="flex: 1;">
-        <div style="font-weight: 700; color: white;">${title}</div>
+        <div style="font-weight: 700; color: hsl(var(--text-main));">${title}</div>
         <div style="margin-top: 6px; font-size: 0.85rem; color: hsl(var(--text-muted)); line-height: 1.4;">${desc}</div>
       </div>
       <div style="min-width: 220px;">

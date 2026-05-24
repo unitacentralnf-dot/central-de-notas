@@ -103,7 +103,7 @@ async function renderRequestsTab(tabContent) {
                       ${req.nome.split(' ').map(p => p[0]).join('').substring(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <div style="font-weight: 700; color: white; font-size: 0.95rem;">${req.nome}</div>
+                      <div style="font-weight: 700; color: hsl(var(--text-main)); font-size: 0.95rem;">${req.nome}</div>
                       <div style="font-size: 0.8rem; color: hsl(var(--text-muted));">${req.email}</div>
                     </div>
                   </div>
@@ -174,7 +174,7 @@ async function renderRequestsTab(tabContent) {
                 const sb = STATUS_BADGE[req.status] || STATUS_BADGE.pendente;
                 return `
                   <tr>
-                    <td style="font-weight: 600; color: white;">${req.nome}</td>
+                    <td style="font-weight: 600; color: hsl(var(--text-main));">${req.nome}</td>
                     <td style="font-size: 0.82rem; color: hsl(var(--text-muted));">${req.email}</td>
                     <td>${req.obraSolicitada}</td>
                     <td><span class="badge ${sb.cls}"><span class="badge-dot"></span>${sb.label}</span></td>
@@ -240,7 +240,7 @@ async function renderUsersTab(tabContent) {
  
       <!-- Formulário de novo usuário (oculto) -->
       <div id="new-user-form-panel" style="display: none; background: hsl(var(--bg-input)); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px;">
-        <h3 style="font-size: 0.9rem; font-weight: 700; color: white; margin-bottom: 16px;">➕ Adicionar Novo Usuário</h3>
+        <h3 style="font-size: 0.9rem; font-weight: 700; color: hsl(var(--text-main)); margin-bottom: 16px;">➕ Adicionar Novo Usuário</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label">Nome Completo</label>
@@ -298,7 +298,7 @@ async function renderUsersTab(tabContent) {
                   <td>
                     <div style="display: flex; align-items: center; gap: 10px;">
                       <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(260,70%,55%)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; color: white; flex-shrink: 0;">${u.initials}</div>
-                      <span style="font-weight: 600; color: white;">${u.nome}</span>
+                      <span style="font-weight: 600; color: hsl(var(--text-main));">${u.nome}</span>
                     </div>
                   </td>
                   <td style="font-size: 0.82rem; color: hsl(var(--text-muted));">${u.email}</td>
@@ -379,7 +379,7 @@ async function renderObrasTab(tabContent) {
 
       <!-- Formulário nova obra -->
       <div id="new-obra-form-panel" style="display: none; background: hsl(var(--bg-input)); border: 1px solid var(--border-light); border-radius: var(--radius-md); padding: 20px; margin-bottom: 20px;">
-        <h3 style="font-size: 0.9rem; font-weight: 700; color: white; margin-bottom: 16px;">🏗️ Nova Obra</h3>
+        <h3 style="font-size: 0.9rem; font-weight: 700; color: hsl(var(--text-main)); margin-bottom: 16px;">🏗️ Nova Obra</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
           <div class="form-group" style="margin-bottom: 0;">
             <label class="form-label">Nome da Obra</label>
@@ -417,7 +417,7 @@ async function renderObrasTab(tabContent) {
               const isDirty = obra.protestStatus === 'dirty';
               return `
                 <tr>
-                  <td style="font-weight: 600; color: white;">${obra.name}</td>
+                  <td style="font-weight: 600; color: hsl(var(--text-main));">${obra.name}</td>
                   <td style="font-family: monospace; font-size: 0.82rem;">${obra.cnpj}</td>
                   <td style="font-size: 0.82rem; color: hsl(var(--text-muted));">${obra.address}</td>
                   <td>

@@ -28,7 +28,7 @@ export async function renderNFe(container, currentRole, activeObraId) {
       <!-- Filtros e Sincronização -->
       <div class="filter-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div style="font-size: 0.95rem; color: hsl(var(--text-muted)); font-weight: 500;">
-          Obra Integrada: <strong style="color: white;">${selectedObra ? selectedObra.name : 'Nenhuma'}</strong> <span style="font-size: 0.8rem; color: hsl(var(--text-dim)); font-family: monospace; margin-left: 6px;">(CNPJ: ${selectedObra ? selectedObra.cnpj : ''})</span>
+          Obra Integrada: <strong style="color: hsl(var(--text-main));">${selectedObra ? selectedObra.name : 'Nenhuma'}</strong> <span style="font-size: 0.8rem; color: hsl(var(--text-dim)); font-family: monospace; margin-left: 6px;">(CNPJ: ${selectedObra ? selectedObra.cnpj : ''})</span>
         </div>
 
         <div style="display: flex; gap: 12px; align-items: center;">
@@ -49,7 +49,7 @@ export async function renderNFe(container, currentRole, activeObraId) {
             <span style="font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase;">Total de Notas</span>
             <span style="font-size: 1.25rem;">📊</span>
           </div>
-          <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-top: 8px;">${totalNFe} NF-es</div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: hsl(var(--text-main)); margin-top: 8px;">${totalNFe} NF-es</div>
           <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); margin-top: 4px;">Recebidas da Sefaz</div>
         </div>
 
@@ -58,7 +58,7 @@ export async function renderNFe(container, currentRole, activeObraId) {
             <span style="font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase;">Valor Total Acumulado</span>
             <span style="font-size: 1.25rem;">💰</span>
           </div>
-          <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-top: 8px;">${fmt(valorTotal)}</div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: hsl(var(--text-main)); margin-top: 8px;">${fmt(valorTotal)}</div>
           <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); margin-top: 4px;">Volume financeiro</div>
         </div>
 
@@ -67,7 +67,7 @@ export async function renderNFe(container, currentRole, activeObraId) {
             <span style="font-size: 0.8rem; font-weight: 600; color: hsl(var(--text-muted)); text-transform: uppercase;">Notas a Manifestar</span>
             <span style="font-size: 1.25rem;">⚖️</span>
           </div>
-          <div style="font-size: 1.5rem; font-weight: 700; color: white; margin-top: 8px;">${aManifestar} Pendentes</div>
+          <div style="font-size: 1.5rem; font-weight: 700; color: hsl(var(--text-main)); margin-top: 8px;">${aManifestar} Pendentes</div>
           <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); margin-top: 4px;">Exige ação imediata</div>
         </div>
       </section>
@@ -121,14 +121,14 @@ export async function renderNFe(container, currentRole, activeObraId) {
                 return `
                   <tr>
                     <td>
-                      <div style="font-weight: 600; color: white;">NF-e nº ${n.number}</div>
+                      <div style="font-weight: 600; color: hsl(var(--text-main));">NF-e nº ${n.number}</div>
                       <div style="font-size: 0.75rem; color: hsl(var(--text-dim));">Série: ${n.serie} | Chave: ...${n.accessKey ? n.accessKey.slice(-8) : ''}</div>
                     </td>
                     <td>
-                      <div style="font-weight: 500; color: white;">${n.issuer}</div>
+                      <div style="font-weight: 500; color: hsl(var(--text-main));">${n.issuer}</div>
                       <div style="font-size: 0.75rem; color: hsl(var(--text-dim)); font-family: monospace;">CNPJ: ${n.issuerCnpj}</div>
                     </td>
-                    <td style="font-weight: 700; color: white;">${fmt(n.value)}</td>
+                    <td style="font-weight: 700; color: hsl(var(--text-main));">${fmt(n.value)}</td>
                     <td>${new Date(n.issueDate).toLocaleDateString('pt-BR')}</td>
                     <td>
                       <span class="badge ${badgeManifest}">
@@ -274,13 +274,13 @@ function openNfeDetailModal(nfeId, nfes) {
     <div>
       <div style="font-size: 0.8rem; background-color: hsl(var(--bg-input)); border: 1px solid var(--border-light); padding: 12px; border-radius: var(--radius-sm); margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
         <div>
-          <span style="font-weight:600; color: white;">Chave de Acesso Sefaz (44 dígitos):</span><br>
+          <span style="font-weight:600; color: hsl(var(--text-main));">Chave de Acesso Sefaz (44 dígitos):</span><br>
           <span id="nfe-access-key-text" style="font-family: monospace; font-size: 0.85rem; letter-spacing: 0.5px; color: hsl(var(--color-primary)); word-break: break-all;">${nfe.accessKey}</span>
         </div>
         <button class="btn btn-secondary btn-sm" id="btn-copy-key" style="white-space: nowrap; padding: 6px 10px;">Copiar Chave</button>
       </div>
 
-      <h4 style="color: white; margin-bottom: 12px; font-size: 0.9rem; text-transform: uppercase;">Itens da Nota Fiscal</h4>
+      <h4 style="color: hsl(var(--text-main)); margin-bottom: 12px; font-size: 0.9rem; text-transform: uppercase;">Itens da Nota Fiscal</h4>
       
       <table class="table-premium" aria-label="Itens da Nota Fiscal">
         <thead>
@@ -297,17 +297,17 @@ function openNfeDetailModal(nfeId, nfes) {
           ${nfe.items.map(item => `
             <tr>
               <td style="font-family: monospace; font-size: 0.8rem;">${item.code}</td>
-              <td style="color: white; font-weight: 500;">${item.name}</td>
+              <td style="color: hsl(var(--text-main)); font-weight: 500;">${item.name}</td>
               <td>${item.qty}</td>
               <td>${item.unit}</td>
               <td>${fmt(item.price)}</td>
-              <td style="font-weight: 700; color: white;">${fmt(item.qty * item.price)}</td>
+              <td style="font-weight: 700; color: hsl(var(--text-main));">${fmt(item.qty * item.price)}</td>
             </tr>
           `).join('')}
         </tbody>
       </table>
 
-      <div style="text-align: right; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-light); font-size: 1.1rem; font-weight: 700; color: white;">
+      <div style="text-align: right; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-light); font-size: 1.1rem; font-weight: 700; color: hsl(var(--text-main));">
         Valor Líquido da Nota: ${fmt(nfe.value)}
       </div>
     </div>
