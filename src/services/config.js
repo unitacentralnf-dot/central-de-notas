@@ -1,5 +1,6 @@
 const config = {
   // Troque para 'real' quando as APIs reais estiverem prontas
+// Definir o provedor de dados (mock ou real) via .env
   provider: import.meta.env.VITE_DATA_PROVIDER || 'mock',
 
   // Credenciais das APIs reais (via .env)
