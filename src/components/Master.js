@@ -303,7 +303,7 @@ async function renderUsersTab(tabContent) {
                   </td>
                   <td style="font-size: 0.82rem; color: hsl(var(--text-muted));">${u.email}</td>
                   <td><span class="badge ${badgeCls}"><span class="badge-dot"></span>${roleLabel}</span></td>
-                  <td style="font-size: 0.82rem; color: ${u.obraNome.startsWith('Todas') ? 'hsl(var(--text-dim))' : 'white'}; font-weight: ${u.obraNome.startsWith('Todas') ? 'normal' : '600'};">${u.obraNome}</td>
+                  <td style="font-size: 0.82rem; color: ${u.obraNome.startsWith('Todas') ? 'hsl(var(--text-dim))' : 'hsl(var(--text-main))'}; font-weight: ${u.obraNome.startsWith('Todas') ? 'normal' : '600'};">${u.obraNome}</td>
                   <td>
                     <button class="btn btn-danger btn-sm btn-delete-user" data-id="${u.id}" data-nome="${u.nome}" style="font-size: 0.75rem; padding: 4px 10px;">
                       Remover

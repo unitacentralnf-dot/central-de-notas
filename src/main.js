@@ -89,8 +89,12 @@ function initTheme() {
 
 function applyTheme(theme) {
   document.body.setAttribute('data-theme', theme);
-  const t = document.getElementById('theme-toggle-text');
-  if (t) t.textContent = theme === 'dark' ? 'Escuro' : 'Claro';
+  const sun = document.getElementById('theme-icon-sun');
+  const moon = document.getElementById('theme-icon-moon');
+  if (sun && moon) {
+    sun.style.display = theme === 'dark' ? 'block' : 'none';
+    moon.style.display = theme === 'dark' ? 'none' : 'block';
+  }
 }
 
 async function startApp() {
