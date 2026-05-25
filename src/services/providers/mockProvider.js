@@ -207,7 +207,201 @@ export async function mockLaunchNFe(nfeId, costCenter) {
 }
 
 export async function mockGetNotifications() {
-  return [];
+  const notifications = [];
+  const cleanFmt = (v) => parseFloat(v).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  
+  try {
+    // 1. Notificações de Protesto
+    const { data: protestos } = await db()
+      .from('protestos')
+      .select('*, obras(nome)')
+      .eq('status', 'Ativo');
+
+    if (protestos) {
+      protestos.forEach(p => {
+        notifications.push({
+          id: `protest-${p.id}`,
+          type: 'danger',
+          message: `🚨 Protesto Ativo no CNPJ da obra "${p.obras?.nome || 'Principal'}": Credor ${p.credor} no valor de ${cleanFmt(p.valor)}.`,
+          timestamp: p.created_at
+        });
+      });
+    }
+
+    // 2. Notificações de NFe recebidas recentemente
+    const { data: nfes } = await db()
+      .from('notas_fiscais')
+      .select('*, obras(nome)')
+      .order('data_emissao', { ascending: false })
+      .limit(3);
+
+    if (nfes) {
+      nfes.forEach(n => {
+        notifications.push({
+          id: `nfe-${n.id}`,
+          type: 'info',
+          message: `⚡ [Automação SEFAZ] Nota Fiscal nº ${n.chave_acesso.substring(25, 34)} emitida por ${n.fornecedor} (${cleanFmt(n.valor)}) capturada para a obra "${n.obras?.nome || 'Principal'}".`,
+          timestamp: `${n.data_emissao}T08:30:00.000Z`
+        });
+      });
+    }
+
+    // 3. Notificações de Faturas Atrasadas
+    const { data: faturas } = await db()
+      .from('faturas')
+      .select('*, contas_fixas(*, obras(nome))')
+      .in('status', ['Pendente', 'nao_chegou']);
+
+    if (faturas) {
+      const hoje = new Date();
+      faturas.forEach(f => {
+        const rule = f.contas_fixas;
+        if (!rule) return;
+        const venc = new Date(f.data_vencimento);
+        if (venc < hoje) {
+          const diffTime = Math.abs(hoje - venc);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          notifications.push({
+            id: `bill-delay-${f.id}`,
+            type: 'danger',
+            message: `⚠️ Fatura de ${rule.nome} da obra "${rule.obras?.nome || 'Principal'}" vencida há ${diffDays} dias! Valor: ${cleanFmt(f.valor)}.`,
+            timestamp: `${f.data_vencimento}T09:00:00.000Z`
+          });
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Erro ao gerar notificações dinâmicas:', err);
+  }
+
+  // 4. Logs de Automação Fictícios do Dia para dar sensação de robôs ativos
+  const agora = new Date();
+  const hojeStr = agora.toISOString().split('T')[0];
+  
+  notifications.push({
+    id: `cron-protests`,
+    type: 'success',
+    message: `🤖 [Varredura Automática] Consulta de protestos realizada no CNPJ de todas as obras via Central de Cartórios às 07:00. Nenhum novo protesto localizado.`,
+    timestamp: `${hojeStr}T07:00:00.000Z`
+  });
+
+  notifications.push({
+    id: `cron-ocr`,
+    type: 'success',
+    message: `🤖 [IA OCR] Processamento de boletos via Google Vision finalizado. 100% de correspondência nos códigos de barras localizados.`,
+    timestamp: `${hojeStr}T08:00:00.000Z`
+  });
+
+  // Ordenar por data decrescente (mais recentes primeiro)
+  return notifications
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+    .slice(0, 15);
+}
+
+// --- MÓDULO CENTRAL DE DOCUMENTOS (timeline e hub) ---
+export async function mockGetDocumentsByObra(obraId) {
+  if (!obraId) return [];
+  const docs = [];
+
+  try {
+    // 1. Buscar Notas Fiscais da obra
+    const { data: nfes, error: nfeError } = await db()
+      .from('notas_fiscais')
+      .select('*')
+      .eq('obra_id', obraId);
+
+    if (nfeError) throw nfeError;
+
+    if (nfes) {
+      nfes.forEach(n => {
+        const timestamp = new Date(n.data_emissao).getTime();
+        
+        // Documento XML
+        docs.push({
+          id: `xml-${n.id}`,
+          obraId: n.obra_id,
+          name: `NFe_${n.chave_acesso.substring(25, 34)}.xml`,
+          type: 'xml',
+          category: 'Nota Fiscal (XML)',
+          issuer: n.fornecedor,
+          value: parseFloat(n.valor),
+          date: n.data_emissao,
+          timestamp: timestamp,
+          size: '18 KB',
+          status: 'Recebido via SEFAZ'
+        });
+
+        // Documento DANFE PDF
+        docs.push({
+          id: `danfe-${n.id}`,
+          obraId: n.obra_id,
+          name: `DANFE_${n.chave_acesso.substring(25, 34)}.pdf`,
+          type: 'pdf',
+          category: 'Nota Fiscal (DANFE)',
+          issuer: n.fornecedor,
+          value: parseFloat(n.valor),
+          date: n.data_emissao,
+          timestamp: timestamp + 1000, // ordena logo depois do XML
+          size: '145 KB',
+          status: n.status_manifesto === 'Pendente' ? 'Pendente de Manifesto' : `Manifestado (${n.status_manifesto})`
+        });
+      });
+    }
+
+    // 2. Buscar Faturas de contas fixas da obra
+    const { data: faturas, error: faturaError } = await db()
+      .from('faturas')
+      .select('*, contas_fixas!inner(*)')
+      .eq('contas_fixas.obra_id', obraId);
+
+    if (faturaError) throw faturaError;
+
+    if (faturas) {
+      faturas.forEach(f => {
+        const rule = f.contas_fixas;
+        const timestamp = new Date(f.data_vencimento).getTime();
+
+        // Se a fatura existe (não é 'nao_chegou'), gera o PDF do boleto
+        if (f.status !== 'nao_chegou') {
+          docs.push({
+            id: `boleto-${f.id}`,
+            obraId: rule.obra_id,
+            name: `Boleto_${rule.nome.replace(/\s+/g, '_')}_${f.mes_referencia}.pdf`,
+            type: 'boleto',
+            category: 'Boleto de Cobrança',
+            issuer: rule.nome,
+            value: parseFloat(f.valor),
+            date: f.data_vencimento,
+            timestamp: timestamp,
+            size: '78 KB',
+            status: f.status === 'paga' ? 'Pago' : 'Lançado no Financeiro'
+          });
+        }
+
+        // Se estiver paga, gera o comprovante de pagamento
+        if (f.status === 'paga') {
+          docs.push({
+            id: `comp-${f.id}`,
+            obraId: rule.obra_id,
+            name: `Comprovante_${rule.nome.replace(/\s+/g, '_')}_${f.mes_referencia}.pdf`,
+            type: 'comprovante',
+            category: 'Comprovante de Pagamento',
+            issuer: 'Banco Unita S.A.',
+            value: parseFloat(f.valor),
+            date: f.data_vencimento,
+            timestamp: timestamp + 5000, // ordena logo após o boleto
+            size: '52 KB',
+            status: 'Liquidado via DDA'
+          });
+        }
+      });
+    }
+  } catch (err) {
+    console.error('Erro ao consolidar documentos:', err);
+  }
+
+  // Ordenar do mais recente para o mais antigo
+  return docs.sort((a, b) => b.timestamp - a.timestamp);
 }
 
 export async function mockDispatchManualAlert(billId, senderName) {

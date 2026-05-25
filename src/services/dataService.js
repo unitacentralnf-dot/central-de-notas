@@ -113,3 +113,8 @@ export async function getUsuarios() { return provider.mockGetUsuarios(); }
 export async function createUsuario(data) { return provider.mockCreateUsuario(data); }
 export async function updateUsuario(id, updates) { return provider.mockUpdateUsuario(id, updates); }
 export async function deleteUsuario(id) { return provider.mockDeleteUsuario(id); }
+
+// --- MÓDULO CENTRAL DE DOCUMENTOS ---
+export async function getDocumentsByObra(obraId) {
+  return provider.mockGetDocumentsByObra(obraId);
+}

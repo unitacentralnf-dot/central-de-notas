@@ -10,6 +10,7 @@ import { renderDDA } from './components/DDA.js';
 import { renderMaster } from './components/Master.js';
 import { renderIntegrations } from './components/Integrations.js';
 import { renderOCR } from './components/OCRUploader.js';
+import { renderDocCentral } from './components/DocCentral.js';
 
 // Estado da Aplicação na Sessão
 let currentView = 'dashboard'; 
@@ -35,6 +36,7 @@ const navItems = {
   'dashboard': document.getElementById('nav-dashboard'),
   'dda': document.getElementById('nav-dda'),
   'nfe': document.getElementById('nav-nfe'),
+  'doc-central': document.getElementById('nav-doc-central'),
   'fixed-bills': document.getElementById('nav-fixed-bills'),
   'protests': document.getElementById('nav-protests'),
   'integrations': document.getElementById('nav-integrations'),
@@ -47,6 +49,7 @@ const viewTitles = {
   'dashboard': 'Dashboard Operacional & Obras',
   'dda': 'Triagem DDA (Câmara Interbancária)',
   'nfe': 'Notas Fiscais Eletrônicas (NFe / Sefaz)',
+  'doc-central': 'Central de Documentos & Timeline',
   'fixed-bills': 'Gestão de Contas Fixas Recorrentes',
   'protests': 'Regularidade Fiscal (Protestos CNPJ)',
   'integrations': 'Integrações & Modos de Operação',
@@ -453,6 +456,8 @@ async function renderActiveView() {
     await renderDDA(contentContainer, currentRole, currentObraId);
   } else if (currentView === 'nfe') {
     await renderNFe(contentContainer, currentRole, currentObraId);
+  } else if (currentView === 'doc-central') {
+    await renderDocCentral(contentContainer, currentRole, currentObraId);
   } else if (currentView === 'fixed-bills') {
     await renderFixedBills(contentContainer, currentRole, currentObraId);
   } else if (currentView === 'protests') {
